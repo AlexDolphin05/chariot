@@ -25,7 +25,7 @@ const mockProjects: ChariotProjectCard[] = [
     status: "active",
     priority: 1,
     workspaceId: "ws-a",
-    boardPosition: { x: 0, y: 0 },
+    boardPosition: { x: 120, y: 100 },
   },
   {
     id: "project-b",
@@ -35,7 +35,7 @@ const mockProjects: ChariotProjectCard[] = [
     status: "active",
     priority: 2,
     workspaceId: "ws-b",
-    boardPosition: { x: 220, y: 0 },
+    boardPosition: { x: 420, y: 140 },
   },
   {
     id: "project-c",
@@ -45,7 +45,7 @@ const mockProjects: ChariotProjectCard[] = [
     status: "idle",
     priority: 3,
     workspaceId: "ws-c",
-    boardPosition: { x: 440, y: 0 },
+    boardPosition: { x: 280, y: 300 },
   },
 ];
 

@@ -6,8 +6,9 @@ import { useKernelStore } from "./store";
 import { publish } from "./eventBus";
 
 export function openProject(projectId: string): void {
-  const { setActiveProjectId, setActiveWorkspaceId, workspaces } =
+  const { setAppViewMode, setActiveProjectId, setActiveWorkspaceId, workspaces } =
     useKernelStore.getState();
+  setAppViewMode("workspace");
   setActiveProjectId(projectId);
   const ws = workspaces.find((w) => w.projectId === projectId);
   setActiveWorkspaceId(ws?.id ?? null);
@@ -16,6 +17,11 @@ export function openProject(projectId: string): void {
     type: "workspace/active.changed",
     payload: { workspaceId: ws?.id ?? null },
   });
+}
+
+export function backToBoard(): void {
+  const { setAppViewMode } = useKernelStore.getState();
+  setAppViewMode("board");
 }
 
 export function setActiveWorkspace(workspaceId: string | null): void {

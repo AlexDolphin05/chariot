@@ -12,6 +12,9 @@ export default defineConfig({
       "@chariot/ui": path.resolve(__dirname, "../../packages/ui/src"),
       "@chariot/board": path.resolve(__dirname, "../../packages/board/src"),
       "@chariot/workbench": path.resolve(__dirname, "../../packages/workbench/src"),
+      "@chariot/module-hermit": path.resolve(__dirname, "../../packages/module-hermit/src"),
+      "@chariot/module-planner": path.resolve(__dirname, "../../packages/module-planner/src"),
+      "@chariot/module-userkiller": path.resolve(__dirname, "../../packages/module-userkiller/src"),
     },
   },
 });

@@ -1,10 +1,14 @@
 /**
- * Shell 布局：左 Board + 右 Workbench + 底 Global Hermit Bar
+ * Shell 布局：TopBar + MainViewport（按 mode 切换 Board / Workspace）+ BottomGlobalHermitBar + FloatingPlanetDock
+ * 不是左右平铺的 dashboard，而是统一空间界面
  */
-import { BoardPane, GlobalHermitBar } from "@chariot/board";
-import { WorkbenchPane } from "@chariot/workbench";
+import { useKernelStore } from "@chariot/kernel";
+import { BoardCanvasView, GlobalHermitBar } from "@chariot/board";
+import { WorkspaceView, PlanetDock } from "@chariot/workbench";
 
 export function ShellLayout() {
+  const appViewMode = useKernelStore((s) => s.appViewMode);
+
   return (
     <div
       style={{
@@ -13,10 +17,11 @@ export function ShellLayout() {
         height: "100vh",
       }}
     >
-      {/* Header */}
+      {/* TopBar：轻量，workspace 模式下由 WorkspaceView 提供 Back to Board */}
       <header
         style={{
           height: "48px",
+          flexShrink: 0,
           borderBottom: "1px solid rgba(128,128,128,0.2)",
           display: "flex",
           alignItems: "center",
@@ -28,36 +33,38 @@ export function ShellLayout() {
         Chariot
       </header>
 
-      {/* Main: Board (left) + Workbench (right) */}
+      {/* MainViewport：按 appViewMode 渲染 Board 或 Workspace */}
       <div
         style={{
           flex: 1,
-          display: "flex",
           overflow: "hidden",
+          position: "relative",
         }}
       >
-        <aside
-          style={{
-            width: "320px",
-            minWidth: "280px",
-            borderRight: "1px solid rgba(128,128,128,0.2)",
-            overflow: "hidden",
-          }}
-        >
-          <BoardPane />
-        </aside>
-        <main
-          style={{
-            flex: 1,
-            overflow: "hidden",
-          }}
-        >
-          <WorkbenchPane />
-        </main>
+        {appViewMode === "board" ? (
+          <BoardCanvasView />
+        ) : (
+          <WorkspaceView />
+        )}
       </div>
 
-      {/* Bottom: Global Hermit Bar */}
+      {/* BottomGlobalHermitBar：常驻 */}
       <GlobalHermitBar />
+
+      {/* FloatingPlanetDock：仅 workspace 模式 */}
+      {appViewMode === "workspace" && (
+        <div
+          style={{
+            position: "fixed",
+            bottom: "72px",
+            left: "50%",
+            transform: "translateX(-50%)",
+            zIndex: 100,
+          }}
+        >
+          <PlanetDock />
+        </div>
+      )}
     </div>
   );
 }

@@ -20,6 +20,15 @@ importers:
       '@chariot/kernel':
         specifier: workspace:*
         version: link:../../packages/kernel
+      '@chariot/module-hermit':
+        specifier: workspace:*
+        version: link:../../packages/module-hermit
+      '@chariot/module-planner':
+        specifier: workspace:*
+        version: link:../../packages/module-planner
+      '@chariot/module-userkiller':
+        specifier: workspace:*
+        version: link:../../packages/module-userkiller
       '@chariot/types':
         specifier: workspace:*
         version: link:../../packages/types
@@ -66,6 +75,9 @@ importers:
       '@chariot/kernel':
         specifier: workspace:*
         version: link:../kernel
+      '@chariot/module-planner':
+        specifier: workspace:*
+        version: link:../module-planner
       '@chariot/types':
         specifier: workspace:*
         version: link:../types

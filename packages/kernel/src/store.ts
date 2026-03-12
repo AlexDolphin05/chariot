@@ -8,7 +8,10 @@ import type {
   ChariotWorkspace,
 } from "@chariot/types";
 
+export type AppViewMode = "board" | "workspace";
+
 export type KernelState = {
+  appViewMode: AppViewMode;
   projects: ChariotProjectCard[];
   workspaces: ChariotWorkspace[];
   activeProjectId: string | null;
@@ -18,6 +21,7 @@ export type KernelState = {
 };
 
 export type KernelActions = {
+  setAppViewMode: (mode: AppViewMode) => void;
   setProjects: (projects: ChariotProjectCard[]) => void;
   setWorkspaces: (workspaces: ChariotWorkspace[]) => void;
   setActiveProjectId: (id: string | null) => void;
@@ -27,6 +31,7 @@ export type KernelActions = {
 };
 
 export const useKernelStore = create<KernelState & KernelActions>((set) => ({
+  appViewMode: "board",
   projects: [],
   workspaces: [],
   activeProjectId: null,
@@ -34,6 +39,7 @@ export const useKernelStore = create<KernelState & KernelActions>((set) => ({
   activeWorkbenchModule: "hermit",
   globalHermitInput: "",
 
+  setAppViewMode: (appViewMode) => set({ appViewMode }),
   setProjects: (projects) => set({ projects }),
   setWorkspaces: (workspaces) => set({ workspaces }),
   setActiveProjectId: (activeProjectId) => set({ activeProjectId }),

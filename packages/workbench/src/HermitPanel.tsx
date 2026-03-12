@@ -1,6 +1,7 @@
 /**
- * @chariot/workbench — Hermit 面板
- * 基于当前 workspace 上下文
+ * @chariot/workbench — Workspace Hermit 面板
+ * 基于当前 workspace / project map / sniff 的工作区 Hermit
+ * 显示 context、suggestions、mock 回答区域
  */
 import { useKernelStore } from "@chariot/kernel";
 import { PanelShell } from "@chariot/ui";
@@ -14,15 +15,29 @@ export function HermitPanel() {
     : null;
 
   return (
-    <PanelShell title="Hermit">
+    <PanelShell title="Workspace Hermit">
       {sniff ? (
         <div style={{ fontSize: "13px" }}>
-          <div style={{ marginBottom: "8px" }}>{sniff.summary}</div>
-          <div style={{ color: "rgba(128,128,128,0.9)" }}>
-            Suggestions: {sniff.suggestions.join("; ")}
+          <div style={{ fontWeight: 600, marginBottom: "6px" }}>Context</div>
+          <div style={{ marginBottom: "12px", color: "rgba(128,128,128,0.95)" }}>
+            {sniff.summary}
           </div>
-          <div style={{ marginTop: "8px", fontSize: "11px", opacity: 0.7 }}>
-            [MOCK] Future: connect to HERMIT context builder
+          <div style={{ fontWeight: 600, marginBottom: "6px" }}>Suggestions</div>
+          <div style={{ marginBottom: "12px", color: "rgba(128,128,128,0.9)" }}>
+            {sniff.suggestions.join("; ")}
+          </div>
+          <div style={{ fontWeight: 600, marginBottom: "6px" }}>Mock Answer</div>
+          <div
+            style={{
+              padding: "10px",
+              background: "rgba(0,0,0,0.2)",
+              borderRadius: "6px",
+              fontSize: "12px",
+              color: "rgba(180,200,220,0.9)",
+            }}
+          >
+            [MOCK] Based on project context, consider completing task-1 before
+            task-2. Future: connect to HERMIT context builder.
           </div>
         </div>
       ) : (

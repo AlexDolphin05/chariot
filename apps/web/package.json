@@ -14,6 +14,9 @@
     "@chariot/ui": "workspace:*",
     "@chariot/board": "workspace:*",
     "@chariot/workbench": "workspace:*",
+    "@chariot/module-hermit": "workspace:*",
+    "@chariot/module-planner": "workspace:*",
+    "@chariot/module-userkiller": "workspace:*",
     "react": "^19.2.1",
     "react-dom": "^19.2.1",
     "react-router-dom": "^7.1.1"
