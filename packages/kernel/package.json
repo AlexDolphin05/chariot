@@ -1,0 +1,17 @@
+{
+  "name": "@chariot/kernel",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@chariot/types": "workspace:*",
+    "zustand": "^5.0.2"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3"
+  }
+}

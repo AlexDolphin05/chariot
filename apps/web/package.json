@@ -1,0 +1,30 @@
+{
+  "name": "web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@chariot/types": "workspace:*",
+    "@chariot/kernel": "workspace:*",
+    "@chariot/ui": "workspace:*",
+    "@chariot/board": "workspace:*",
+    "@chariot/workbench": "workspace:*",
+    "react": "^19.2.1",
+    "react-dom": "^19.2.1",
+    "react-router-dom": "^7.1.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.1.3",
+    "@types/react": "^19.2.1",
+    "@types/react-dom": "^19.2.1",
+    "@vitejs/plugin-react": "^5.0.4",
+    "tailwindcss": "^4.1.14",
+    "typescript": "5.9.3",
+    "vite": "^7.1.7"
+  }
+}

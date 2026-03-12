@@ -1,0 +1,18 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "baseUrl": ".",
+    "paths": {
+      "@chariot/types": ["../../packages/types/src"],
+      "@chariot/kernel": ["../../packages/kernel/src"],
+      "@chariot/ui": ["../../packages/ui/src"],
+      "@chariot/board": ["../../packages/board/src"],
+      "@chariot/workbench": ["../../packages/workbench/src"],
+      "@chariot/module-hermit": ["../../packages/module-hermit/src"],
+      "@chariot/module-planner": ["../../packages/module-planner/src"],
+      "@chariot/module-userkiller": ["../../packages/module-userkiller/src"]
+    }
+  },
+  "include": ["src/**/*"]
+}
