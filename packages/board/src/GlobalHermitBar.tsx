@@ -1,15 +1,26 @@
-import { startTransition, useState } from "react";
-import { getBoardScope, publish, useKernelStore } from "@chariot/kernel";
+import { startTransition, useEffect, useState } from "react";
+import {
+  getBoardScope,
+  publish,
+  useChariotI18n,
+  useKernelStore,
+} from "@chariot/kernel";
 import { runHermitInBoardScope } from "@chariot/module-hermit";
 import { tokens } from "@chariot/ui";
 
 export function GlobalHermitBar() {
+  const { locale, t } = useChariotI18n();
   const input = useKernelStore((state) => state.globalHermitInput);
   const setInput = useKernelStore((state) => state.setGlobalHermitInput);
   const [lastAnswer, setLastAnswer] = useState(
-    "Board scope is live. Ask across HERMIT, Emergency Planner, and Userkiller.",
+    t("globalHermit.defaultAnswer"),
   );
   const [isRunning, setIsRunning] = useState(false);
+  const scope = getBoardScope();
+
+  useEffect(() => {
+    setLastAnswer(t("globalHermit.defaultAnswer"));
+  }, [locale]);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -31,7 +42,7 @@ export function GlobalHermitBar() {
     });
 
     setIsRunning(true);
-    const answer = await runHermitInBoardScope(question);
+    const answer = await runHermitInBoardScope(question, locale);
 
     startTransition(() => {
       setLastAnswer(answer);
@@ -62,13 +73,13 @@ export function GlobalHermitBar() {
         }}
       >
         <div>
-          <div className="chariot-microcopy">Global Hermit</div>
+          <div className="chariot-microcopy">{t("globalHermit.title")}</div>
           <div style={{ marginTop: "4px", color: "var(--text-muted)" }}>
-            Board-scope sniffing across all linked projects
+            {t("globalHermit.subtitle")}
           </div>
         </div>
         <span className="chariot-chip">
-          {getBoardScope().projectIds.length} projects in scope
+          {t("globalHermit.scopeCount", { count: scope.projectIds.length })}
         </span>
       </div>
 
@@ -82,7 +93,7 @@ export function GlobalHermitBar() {
       >
         <input
           type="text"
-          placeholder="Ask about integration risks, contract drift, or cross-project sequencing..."
+          placeholder={t("globalHermit.placeholder")}
           value={input}
           onChange={(event) => setInput(event.target.value)}
           style={{
@@ -107,7 +118,7 @@ export function GlobalHermitBar() {
             whiteSpace: "nowrap",
           }}
         >
-          {isRunning ? "Sniffing..." : "Ask"}
+          {isRunning ? t("globalHermit.sniffing") : t("globalHermit.ask")}
         </button>
       </form>
 

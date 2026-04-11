@@ -7,6 +7,7 @@
 
 export type ChariotProjectStatus = "idle" | "active" | "blocked" | "done";
 export type ChariotWorkbenchModuleId = "hermit" | "planner" | "userkiller";
+export type ChariotLocale = "zh-CN" | "en";
 
 export type ChariotRelation = {
   from: string;
@@ -19,6 +20,14 @@ export type ChariotPlannerConflict = {
   type: "time-overlap" | "dependency" | "resource" | "priority";
   message: string;
   relatedProjectIds: string[];
+};
+
+export type ChariotHermitExchange = {
+  id: string;
+  workspaceId: string;
+  question: string;
+  answer: string;
+  createdAt: number;
 };
 
 export type ChariotProjectCard = {

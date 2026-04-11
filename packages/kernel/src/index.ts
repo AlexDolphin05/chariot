@@ -1,5 +1,11 @@
 export { useKernelStore } from "./store";
 export type { KernelActions, KernelHydration, KernelState } from "./store";
+export {
+  getModuleLabel,
+  getStatusLabel,
+  translate,
+  useChariotI18n,
+} from "./copy";
 export { publish, subscribe, subscribeTo } from "./eventBus";
 export {
   getAllModules,

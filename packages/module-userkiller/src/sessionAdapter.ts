@@ -1,3 +1,5 @@
+import type { ChariotLocale } from "@chariot/types";
+
 export type UserkillerSessionStatus =
   | "idle"
   | "executing"
@@ -20,7 +22,8 @@ export interface UserkillerSessionAdapter {
 }
 
 export async function openUserkillerWorkspace(
-  workspaceId: string
+  workspaceId: string,
+  locale: ChariotLocale = "en",
 ): Promise<UserkillerSession> {
   const workspaceLabel = workspaceId.replace("workspace-", "");
 
@@ -32,7 +35,9 @@ export async function openUserkillerWorkspace(
     outputPath: `/mock/output/${workspaceId}`,
     status: "idle",
     summary:
-      "Mock session bridge ready. Future work: connect to session_manager.py and workflow_engine.py.",
+      locale === "zh-CN"
+        ? "Mock 会话桥已就绪。后续要对接 session_manager.py 和 workflow_engine.py。"
+        : "Mock session bridge ready. Future work: connect to session_manager.py and workflow_engine.py.",
     templateCount: workspaceId === "workspace-userkiller" ? 4 : 2,
   };
 }

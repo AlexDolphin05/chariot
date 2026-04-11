@@ -11,5 +11,5 @@ export {
   type ResumeAutomationResult,
   type UserkillerArtifactLoader,
 } from "./artifactLoader";
-export { legacyBridgeNotes } from "./legacyBridgeNotes";
+export { getLegacyBridgeNotes } from "./legacyBridgeNotes";
 export { mockUserkillerBridge, mockUserkillerSession } from "./mockData";

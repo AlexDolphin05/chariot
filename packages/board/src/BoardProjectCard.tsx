@@ -1,5 +1,14 @@
-import type { ChariotProjectCard } from "@chariot/types";
-import { openProject, useKernelStore } from "@chariot/kernel";
+import type {
+  ChariotProjectCard,
+  ChariotWorkbenchModuleId,
+} from "@chariot/types";
+import {
+  getModuleLabel,
+  getStatusLabel,
+  openProject,
+  useChariotI18n,
+  useKernelStore,
+} from "@chariot/kernel";
 import { MapNode } from "@chariot/ui";
 
 type BoardProjectCardProps = {
@@ -7,8 +16,14 @@ type BoardProjectCardProps = {
 };
 
 export function BoardProjectCard({ card }: BoardProjectCardProps) {
+  const { locale, t } = useChariotI18n();
   const activeProjectId = useKernelStore((state) => state.activeProjectId);
   const isActive = activeProjectId === card.id;
+
+  const moduleHints = (card.moduleHints ?? []).filter(
+    (hint): hint is ChariotWorkbenchModuleId =>
+      hint === "hermit" || hint === "planner" || hint === "userkiller",
+  );
 
   return (
     <div
@@ -27,8 +42,11 @@ export function BoardProjectCard({ card }: BoardProjectCardProps) {
         summary={card.summary}
         tags={card.tags}
         status={card.status}
+        statusLabel={getStatusLabel(card.status, locale)}
         onClick={() => openProject(card.id)}
-        hints={card.moduleHints?.map((hint) => `Module ${hint}`)}
+        hints={moduleHints.map((hint) =>
+          t("common.module", { name: getModuleLabel(hint, locale) }),
+        )}
       />
     </div>
   );

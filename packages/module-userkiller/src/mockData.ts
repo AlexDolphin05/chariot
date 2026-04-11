@@ -1,4 +1,4 @@
-import { legacyBridgeNotes } from "./legacyBridgeNotes";
+import { getLegacyBridgeNotes } from "./legacyBridgeNotes";
 
 export const mockUserkillerSession = {
   id: "mock-session-1",
@@ -13,5 +13,5 @@ export const mockUserkillerSession = {
 };
 
 export const mockUserkillerBridge = {
-  notes: legacyBridgeNotes,
+  notes: getLegacyBridgeNotes("en"),
 };

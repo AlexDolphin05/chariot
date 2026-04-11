@@ -1,6 +1,11 @@
-import { useKernelStore } from "@chariot/kernel";
+import {
+  getModuleLabel,
+  useChariotI18n,
+  useKernelStore,
+} from "@chariot/kernel";
 
 export function WorkspaceHeader() {
+  const { locale, t } = useChariotI18n();
   const activeWorkspaceId = useKernelStore((state) => state.activeWorkspaceId);
   const activeProjectId = useKernelStore((state) => state.activeProjectId);
   const activeWorkbenchModule = useKernelStore(
@@ -35,9 +40,9 @@ export function WorkspaceHeader() {
       }}
     >
       <div style={{ minWidth: 0 }}>
-        <div className="chariot-microcopy">Workbench / Workspace</div>
+        <div className="chariot-microcopy">{t("workbench.microcopy")}</div>
         <div style={{ marginTop: "6px", fontSize: "28px", fontWeight: 700 }}>
-          {activeProject?.title ?? "Select a board card"}
+          {activeProject?.title ?? t("workbench.selectProject")}
         </div>
         <div
           style={{
@@ -47,8 +52,7 @@ export function WorkspaceHeader() {
             maxWidth: "720px",
           }}
         >
-          {activeProject?.summary ??
-            "The right pane is the stable project workbench. Click a board card to bind project context, planner snapshot, and module host."}
+          {activeProject?.summary ?? t("workbench.description")}
         </div>
       </div>
 
@@ -59,7 +63,11 @@ export function WorkspaceHeader() {
           gap: "8px",
         }}
       >
-        <span className="chariot-chip">Active module: {activeWorkbenchModule}</span>
+        <span className="chariot-chip">
+          {t("workbench.activeModule", {
+            name: getModuleLabel(activeWorkbenchModule, locale),
+          })}
+        </span>
         {role ? <span className="chariot-chip">{role}</span> : null}
         {sourcePath ? <span className="chariot-chip">{sourcePath}</span> : null}
       </div>

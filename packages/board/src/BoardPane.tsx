@@ -1,15 +1,16 @@
-import { useKernelStore } from "@chariot/kernel";
+import { useChariotI18n, useKernelStore } from "@chariot/kernel";
 import { buildBoardSniffSnapshot } from "@chariot/module-hermit";
 import { tokens } from "@chariot/ui";
 import { BoardProjectCard } from "./BoardProjectCard";
 import { GlobalPlannerOverlay } from "./GlobalPlannerOverlay";
 
 export function BoardPane() {
+  const { locale, t } = useChariotI18n();
   const projects = useKernelStore((state) => state.projects);
   const activeProjectId = useKernelStore((state) => state.activeProjectId);
   const activeProject =
     projects.find((project) => project.id === activeProjectId) ?? null;
-  const boardSniff = buildBoardSniffSnapshot();
+  const boardSniff = buildBoardSniffSnapshot(locale);
 
   return (
     <section
@@ -19,11 +20,11 @@ export function BoardPane() {
         gridTemplateRows: "auto minmax(0, 1fr)",
         gap: "16px",
       }}
-    >
+      >
       <div style={{ display: "grid", gap: "10px" }}>
-        <div className="chariot-microcopy">Board / Canvas</div>
+        <div className="chariot-microcopy">{t("board.microcopy")}</div>
         <div style={{ fontSize: "30px", fontWeight: 700 }}>
-          Cross-project field view
+          {t("board.title")}
         </div>
         <div style={{ color: "var(--text-muted)", lineHeight: 1.5 }}>
           {boardSniff.summary}
@@ -105,13 +106,12 @@ export function BoardPane() {
             maxWidth: "420px",
           }}
         >
-          <div className="chariot-microcopy">Active Workspace Target</div>
+          <div className="chariot-microcopy">{t("board.activeTarget")}</div>
           <div style={{ marginTop: "6px", fontSize: "18px", color: "var(--text-strong)" }}>
-            {activeProject?.title ?? "Select a project card"}
+            {activeProject?.title ?? t("board.selectProject")}
           </div>
           <div style={{ marginTop: "6px", lineHeight: 1.5 }}>
-            {activeProject?.summary ??
-              "The right-side workbench will update as soon as a board card is selected."}
+            {activeProject?.summary ?? t("board.rightWorkbenchHint")}
           </div>
         </div>
       </div>

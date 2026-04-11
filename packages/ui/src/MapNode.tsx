@@ -6,6 +6,7 @@ export type MapNodeProps = {
   summary?: string;
   tags: string[];
   status: ChariotProjectStatus;
+  statusLabel?: string;
   position?: { x: number; y: number };
   onClick?: () => void;
   hints?: string[];
@@ -17,6 +18,7 @@ export function MapNode({
   summary,
   tags,
   status,
+  statusLabel,
   onClick,
   hints,
 }: MapNodeProps) {
@@ -65,7 +67,7 @@ export function MapNode({
             letterSpacing: "0.08em",
           }}
         >
-          {status}
+          {statusLabel ?? status}
         </span>
       </div>
       {summary && (
