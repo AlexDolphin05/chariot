@@ -1,10 +1,22 @@
 export { useKernelStore } from "./store";
-export type { KernelState, KernelActions, AppViewMode } from "./store";
-export { subscribe, publish } from "./eventBus";
-export { registerModule, getModule, getAllModules } from "./moduleRegistry";
+export type { KernelActions, KernelHydration, KernelState } from "./store";
+export { publish, subscribe, subscribeTo } from "./eventBus";
 export {
+  getAllModules,
+  getModule,
+  getWorkbenchModules,
+  registerModule,
+  registerModules,
+} from "./moduleRegistry";
+export {
+  getBoardScope,
+  getWorkspaceScope,
   openProject,
-  backToBoard,
   setActiveWorkspace,
   switchWorkbenchModule,
 } from "./workspaceRuntime";
+export {
+  syncWorkspacePlannerSnapshot,
+  syncWorkspaceSniffSnapshot,
+  syncWorkspaceSnapshots,
+} from "./snapshotSync";

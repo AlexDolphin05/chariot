@@ -1,11 +1,15 @@
 export { userkillerManifest } from "./manifest";
 export {
   openUserkillerWorkspace,
+  type UserkillerSessionAdapter,
   type UserkillerSession,
 } from "./sessionAdapter";
 export {
-  resumeAutomationSession,
   loadAutomationArtifacts,
   type AutomationArtifact,
+  resumeAutomationSession,
+  type ResumeAutomationResult,
+  type UserkillerArtifactLoader,
 } from "./artifactLoader";
-export { mockUserkillerSession } from "./mockData";
+export { legacyBridgeNotes } from "./legacyBridgeNotes";
+export { mockUserkillerBridge, mockUserkillerSession } from "./mockData";

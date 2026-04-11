@@ -11,6 +11,7 @@
     "@chariot/types": "workspace:*",
     "@chariot/kernel": "workspace:*",
     "@chariot/ui": "workspace:*",
+    "@chariot/module-hermit": "workspace:*",
     "@chariot/module-planner": "workspace:*",
     "react": "^19.2.1"
   },

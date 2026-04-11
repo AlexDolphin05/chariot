@@ -1,43 +1,26 @@
-/**
- * @chariot/board — Global Planner Overlay
- * Board Mode 下作为 overlay / inspector，显示全局冲突与建议
- */
-import { mockGlobalPlannerSnapshot } from "@chariot/module-planner";
-import type { PlannerSnapshot } from "@chariot/types";
+import { detectGlobalConflicts } from "@chariot/module-planner";
+import { PanelShell } from "@chariot/ui";
 
 export function GlobalPlannerOverlay() {
-  const snapshot: PlannerSnapshot = mockGlobalPlannerSnapshot;
+  const snapshot = detectGlobalConflicts();
+  const impactedProjectCount = new Set(
+    snapshot.conflicts.flatMap((conflict) => conflict.relatedProjectIds),
+  ).size;
 
   return (
-    <div
-      style={{
-        padding: "12px",
-        background: "rgba(0,0,0,0.5)",
-        borderRadius: "8px",
-        border: "1px solid rgba(128,128,128,0.2)",
-        fontSize: "13px",
-      }}
-    >
-      <div style={{ fontWeight: 600, marginBottom: "8px" }}>
-        Global Planner
-      </div>
-      <div style={{ marginBottom: "6px", color: "rgba(255,200,100,0.9)" }}>
-        {snapshot.conflicts.length} conflict(s)
-      </div>
-      {snapshot.conflicts.length > 0 && (
-        <ul style={{ margin: "0 0 8px 0", paddingLeft: "18px" }}>
-          {snapshot.conflicts.map((c) => (
-            <li key={c.id} style={{ marginBottom: "4px" }}>
-              {c.message}
-            </li>
-          ))}
-        </ul>
-      )}
-      {snapshot.suggestions.length > 0 && (
-        <div style={{ color: "rgba(128,128,128,0.9)" }}>
-          {snapshot.suggestions.join("; ")}
+    <PanelShell title="Global Planner Overlay">
+      <div style={{ display: "grid", gap: "10px", fontSize: "13px" }}>
+        <div className="chariot-status-row">
+          <span className="chariot-chip">{snapshot.conflicts.length} conflicts</span>
+          <span className="chariot-chip">{impactedProjectCount} impacted projects</span>
         </div>
-      )}
-    </div>
+        <div style={{ color: "var(--text-muted)", lineHeight: 1.5 }}>
+          {snapshot.conflicts[0]?.message ?? "No cross-project conflicts detected."}
+        </div>
+        <div style={{ color: "var(--accent-strong)", lineHeight: 1.5 }}>
+          {snapshot.suggestions[0]}
+        </div>
+      </div>
+    </PanelShell>
   );
 }

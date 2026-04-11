@@ -1,15 +1,17 @@
-/**
- * MOCK: Userkiller 模块占位数据
- * Legacy bridge notes: 未来从 userkiller Python 后端迁移时，需适配：
- * - session_manager 的 workspace/output 布局
- * - workflow_engine 的 PM→Planner→Coder→Reviewer 流水线
- * - template_manager 的相似度、兼容性逻辑
- */
+import { legacyBridgeNotes } from "./legacyBridgeNotes";
 
 export const mockUserkillerSession = {
   id: "mock-session-1",
   name: "Mock Automation Session",
+  workspaceId: "workspace-userkiller",
   workspacePath: "/mock/workspace",
   outputPath: "/mock/output",
   status: "idle" as const,
+  summary:
+    "Adapter-only mock session. Real execution remains in the existing Python service.",
+  templateCount: 3,
+};
+
+export const mockUserkillerBridge = {
+  notes: legacyBridgeNotes,
 };

@@ -1,7 +1,9 @@
 export { hermitManifest } from "./manifest";
 export {
   buildBoardHermitContext,
+  buildBoardSniffSnapshot,
   buildWorkspaceHermitContext,
+  buildWorkspaceSniffSnapshot,
   toSniffSnapshot,
 } from "./contextBuilder";
 export type { HermitContext } from "./contextBuilder";

@@ -1,12 +1,125 @@
 @import "tailwindcss";
 
 :root {
-  font-family: system-ui, -apple-system, sans-serif;
-  background: #0f0f0f;
-  color: #e0e0e0;
+  color-scheme: dark;
+  font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+  --border-strong: rgba(234, 226, 208, 0.16);
+  --border-soft: rgba(234, 226, 208, 0.08);
+  --text-strong: #f3ecdd;
+  --text-muted: #c7bfaf;
+  --text-soft: #958e81;
+  --accent: #d7a459;
+  --accent-strong: #f0c98d;
+  --success: #7ec28a;
+  --danger: #e58d89;
+  background:
+    radial-gradient(circle at top left, rgba(215, 164, 89, 0.16), transparent 35%),
+    radial-gradient(circle at right 15%, rgba(124, 173, 137, 0.12), transparent 28%),
+    linear-gradient(180deg, #0d1210 0%, #080b0a 100%);
+  color: var(--text-strong);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100%;
 }
 
 body {
   margin: 0;
   min-height: 100vh;
+  background: transparent;
+  color: var(--text-strong);
+}
+
+#root {
+  min-height: 100vh;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+.chariot-shell {
+  min-height: 100vh;
+  padding: 20px;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 16px;
+}
+
+.chariot-shell-grid {
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(320px, 42%) minmax(0, 1fr);
+  gap: 16px;
+}
+
+.chariot-shell-panel {
+  min-height: 0;
+}
+
+.chariot-workbench-grid {
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 16px;
+}
+
+.chariot-workbench-rail {
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto auto 1fr;
+  gap: 16px;
+}
+
+.chariot-status-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chariot-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border-strong);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.chariot-microcopy {
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-soft);
+}
+
+@media (max-width: 1080px) {
+  .chariot-shell-grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(380px, 46vh) minmax(0, 1fr);
+  }
+
+  .chariot-workbench-grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(320px, 44vh) auto;
+  }
+
+  .chariot-workbench-rail {
+    grid-template-rows: auto;
+  }
+}
+
+@media (max-width: 720px) {
+  .chariot-shell {
+    padding: 14px;
+  }
 }

@@ -1,26 +1,29 @@
-/**
- * Hermit 运行器占位
- * 未来接入 HERMIT 的 hermitBrain / LLM
- * 当前仅返回 mock 解释性文本
- */
 import {
   buildBoardHermitContext,
   buildWorkspaceHermitContext,
 } from "./contextBuilder";
 
-/** MOCK: 在 board 作用域运行 Hermit */
-export async function runHermitInBoardScope(
-  question: string
-): Promise<string> {
+export async function runHermitInBoardScope(question: string): Promise<string> {
   const ctx = buildBoardHermitContext();
-  return `[MOCK] Board Hermit 回答:\n问题: "${question}"\n上下文: ${ctx.summary}\n建议: ${ctx.suggestions.join("; ")}`;
+
+  return [
+    `[MOCK][Board Hermit] ${question}`,
+    `Scope summary: ${ctx.summary}`,
+    `Suggested next move: ${ctx.suggestions[0]}`,
+    `Current cross-project risk: ${ctx.risks[0]}`,
+  ].join("\n");
 }
 
-/** MOCK: 在 project 作用域运行 Hermit */
 export async function runHermitInProjectScope(
   workspaceId: string,
   question: string
 ): Promise<string> {
   const ctx = buildWorkspaceHermitContext(workspaceId);
-  return `[MOCK] Project Hermit 回答:\nworkspace: ${workspaceId}\n问题: "${question}"\n上下文: ${ctx.summary}\n建议: ${ctx.suggestions.join("; ")}`;
+
+  return [
+    `[MOCK][Project Hermit] ${question}`,
+    `Workspace: ${workspaceId}`,
+    `Context summary: ${ctx.summary}`,
+    `Most useful suggestion: ${ctx.suggestions[0]}`,
+  ].join("\n");
 }

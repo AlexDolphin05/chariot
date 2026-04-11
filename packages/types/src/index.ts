@@ -1,16 +1,32 @@
 /**
- * @chariot/types — 共享类型定义
- * 第一阶段重点：统一模型优先于统一 UI
+ * @chariot/types
+ *
+ * 第一阶段先统一数据模型、作用域和模块契约，
+ * 再去接真实能力与更完整的视觉系统。
  */
 
-// --- Project & Workspace ---
+export type ChariotProjectStatus = "idle" | "active" | "blocked" | "done";
+export type ChariotWorkbenchModuleId = "hermit" | "planner" | "userkiller";
+
+export type ChariotRelation = {
+  from: string;
+  to: string;
+  type: string;
+};
+
+export type ChariotPlannerConflict = {
+  id: string;
+  type: "time-overlap" | "dependency" | "resource" | "priority";
+  message: string;
+  relatedProjectIds: string[];
+};
 
 export type ChariotProjectCard = {
   id: string;
   title: string;
   summary?: string;
   tags: string[];
-  status: "idle" | "active" | "blocked" | "done";
+  status: ChariotProjectStatus;
   priority?: number;
   workspaceId: string;
   boardPosition: { x: number; y: number };
@@ -26,13 +42,11 @@ export type ChariotWorkspace = {
   planner?: PlannerSnapshot;
 };
 
-// --- Snapshots ---
-
 export type SniffSnapshot = {
   scope: "board" | "project";
   summary: string;
   entities: string[];
-  relations: Array<{ from: string; to: string; type: string }>;
+  relations: ChariotRelation[];
   risks: string[];
   suggestions: string[];
   updatedAt: number;
@@ -40,35 +54,50 @@ export type SniffSnapshot = {
 
 export type PlannerSnapshot = {
   scope: "global" | "project";
-  conflicts: Array<{
-    id: string;
-    type: "time-overlap" | "dependency" | "resource" | "priority";
-    message: string;
-    relatedProjectIds: string[];
-  }>;
+  conflicts: ChariotPlannerConflict[];
   suggestions: string[];
   updatedAt: number;
 };
-
-// --- Module ---
 
 export type ChariotModuleManifest = {
   id: string;
   name: string;
   kind: "core" | "planner" | "automation" | "insight";
   supports: Array<"board" | "workbench">;
+  description?: string;
 };
 
-// --- Scopes ---
+export type BoardScope = {
+  kind: "board";
+  projectIds: string[];
+  workspaceIds: string[];
+  activeProjectId: string | null;
+};
 
-export type BoardScope = "board";
-export type WorkspaceScope = "workbench";
-
-// --- Events ---
+export type WorkspaceScope = {
+  kind: "project";
+  projectId: string;
+  workspaceId: string;
+};
 
 export type ChariotEvent =
-  | { type: "board/project.open"; payload: { projectId: string } }
-  | { type: "board/hermit.ask"; payload: { question: string } }
-  | { type: "workspace/active.changed"; payload: { workspaceId: string | null } }
-  | { type: "workbench/module.switch"; payload: { moduleId: string } }
-  | { type: "planner/conflicts.updated"; payload: { snapshot: PlannerSnapshot } };
+  | {
+      type: "board/project.open";
+      payload: { projectId: string; workspaceId: string | null };
+    }
+  | {
+      type: "board/hermit.ask";
+      payload: { question: string; scope: BoardScope };
+    }
+  | {
+      type: "workspace/active.changed";
+      payload: { projectId: string | null; workspaceId: string | null };
+    }
+  | {
+      type: "workbench/module.switch";
+      payload: { moduleId: ChariotWorkbenchModuleId };
+    }
+  | {
+      type: "planner/conflicts.updated";
+      payload: { workspaceId: string | null; snapshot: PlannerSnapshot };
+    };

@@ -1,46 +1,63 @@
 # Chariot
 
-统一前端壳项目，整合 HERMIT、emergency-planner、userkiller 三个已有项目的能力。
+Chariot 是一个统一前端壳项目，用来把桌面上的 `HERMIT`、`emergency-planner`、`userkiller` 三个系统接到同一个工作空间里。
+
+第一阶段目标不是把三个项目整页搬进来，而是先把共享模型、内核、模块契约和可运行壳层搭稳：
+
+- `HERMIT` 提供系统认知层能力
+- `emergency-planner` 提供约束与排程层能力
+- `userkiller` 提供自动化会话与产物层能力
+
+当前实现只覆盖 Alex 负责的开荒准备，不做 Tia 负责的完整 Board 视觉系统、post-it 动画或完整业务迁移。
 
 ## 为什么存在
 
-Chariot 不是把三个系统硬拼到一起，而是建立一个统一空间界面：
+三个源项目都已经有自己的页面、状态模型和交互假设，但 Chariot 需要的是一个统一壳，而不是三个应用的拼接页。
 
-- **Hermit** = 系统认知层（Global Hermit Bar + Workspace Hermit 面板，非单一输入框）
-- **Emergency-Planner** = 系统约束/排程层（Global Planner Overlay + Project Planner Panel）
-- **Board/Map** = 系统世界层（Board 为全局画布，Project Map 为局部地图主区域）
+第一阶段优先统一这些 contract：
 
-**注意**：Chariot 不是 dashboard。Board 是全局画布，不是 sidebar。Project Map 是主空间核心地图，不是辅助信息卡。
+- `ChariotProjectCard`
+- `ChariotWorkspace`
+- `SniffSnapshot`
+- `PlannerSnapshot`
+- `ChariotModuleManifest`
+- `ChariotEvent`
 
-## 空间模式
+在这个基础上，Board 可以做全局嗅探和冲突提示，Workbench 可以做项目级工作流与模块入口。
 
-- **Board Mode**（默认）：主视图为完整画布，项目对象散布在画布上，点击进入 Workspace Mode
-- **Workspace Mode**：主视图为当前项目空间，Project Map 占据主区域，Workspace Hermit 常驻，Planet Dock 切换 Planner/Userkiller
+## 当前阶段做了什么
 
-## 当前阶段在做什么
-
-- 完成 Alex 负责的开荒准备：monorepo 骨架、共享类型、内核、模块占位、最小可运行壳
-- 空间语义正确：Board 画布、Workspace 项目空间、Hermit/Planner 分层
-- 不实现 Tia 的完整 Board 视觉
-- 不迁移 userkiller Python 核心
-- 先统一模型，再统一功能
+- 建好 `pnpm workspace` monorepo
+- 建好 `apps/web` 主壳
+- 建好共享类型、kernel、事件总线、module registry、workspace runtime
+- 建好 `board` / `workbench` 骨架
+- 建好 `module-hermit` / `module-planner` / `module-userkiller` 占位模块
+- 写入项目分析、架构、契约、下一步文档
+- 接通 mock 项目卡切换 active workspace 的最小闭环
 
 ## 目录结构
 
-```
+```text
 chariot/
 ├── apps/
-│   └── web/              # 主应用壳
+│   └── web/                    # Vite + React 主应用壳
 ├── packages/
-│   ├── types/            # 共享类型
-│   ├── kernel/           # Zustand store、EventBus、ModuleRegistry、WorkspaceRuntime、appViewMode
-│   ├── ui/               # 共享 UI 基础、MapNode
-│   ├── board/            # BoardCanvasView、GlobalPlannerOverlay
-│   ├── workbench/        # WorkspaceView、ProjectMapView、PlanetDock
-│   ├── module-hermit/    # Hermit 模块壳
-│   ├── module-planner/   # Planner 模块壳
-│   └── module-userkiller/ # Userkiller 模块接口占位
-└── docs/
+│   ├── types/                  # 共享 contract
+│   ├── kernel/                 # store, event bus, module registry, runtime
+│   ├── ui/                     # panel shell, map node, tokens, placeholders
+│   ├── board/                  # BoardPane, BoardProjectCard, GlobalHermitBar
+│   ├── workbench/              # WorkbenchPane, ProjectMapPanel, PlanetDock
+│   ├── module-hermit/          # board/project context builder 与 runner 占位
+│   ├── module-planner/         # global/project snapshot 与冲突占位
+│   └── module-userkiller/      # session/artifact adapter contract 占位
+├── docs/
+│   ├── architecture.md
+│   ├── contracts.md
+│   ├── next-steps-alex.md
+│   └── project-analysis.md
+├── package.json
+├── pnpm-workspace.yaml
+└── tsconfig.base.json
 ```
 
 ## 如何启动
@@ -50,18 +67,45 @@ pnpm install
 pnpm dev
 ```
 
-访问 http://localhost:5173/
+默认访问地址是 [http://localhost:5173](http://localhost:5173)。
 
-## 与三个项目的关系
+### 当前最小可运行行为
 
-| 项目 | 角色 | 复用策略 |
-|------|------|----------|
-| HERMIT | 系统认知层 | 提炼 context building、sniff、parsing 能力；不搬页面 |
-| emergency-planner | 系统约束/排程层 | 提炼 planning window、conflict detection 能力；不搬页面 |
-| userkiller | 自动化工作流层 | 只做 adapter interface + mock；不重写 Python |
+- 页面是固定左右布局：左侧 `BoardPane`，右侧 `WorkbenchPane`
+- 底部常驻 `Global Hermit` 输入条
+- 预置三张 mock 项目卡：`HERMIT`、`Emergency Planner`、`Userkiller`
+- 点击任意项目卡会更新 `activeProjectId` / `activeWorkspaceId`
+- 右侧会同步显示该项目的标题、Hermit mock 信息、Planner mock 信息、Project Map 占位
+- `PlanetDock` 提供 `Hermit` / `Planner` / `Userkiller` 模块入口
+
+## 与三个源项目的关系
+
+### HERMIT
+
+Chariot 会优先复用它的上下文构建、嗅探、项目解释、检索和图结构能力，不直接复用 workflow 页面。
+
+### emergency-planner
+
+Chariot 会优先复用它的 planning window、conflict detection、scheduler、task semantics，不直接复用日历和 onboarding 页面。
+
+### userkiller
+
+Chariot 当前只保留 session / artifact / workflow bridge contract，不重写 Python 核心执行链。
 
 详见 [docs/project-analysis.md](docs/project-analysis.md)。
 
 ## 当前边界
 
-只完成 Alex 这边的开荒准备。Tia 负责的 Board 完整视觉、post-it 动画/交互等后续接入。
+当前仓库只完成 Alex 这边的开荒准备：
+
+- 做统一骨架
+- 做 contract
+- 做 module interface
+- 做 mock runtime
+
+当前不做：
+
+- Tia 负责的完整 Board 美术和交互系统
+- post-it 复杂动画
+- userkiller Python 核心迁移
+- 后端服务整合

@@ -1,59 +1,60 @@
-/**
- * @chariot/workbench — PlanetDock
- * 模块轨道切换器：Hermit 为核心，Planner/Userkiller 为围绕的模块入口
- * dock/chip 风格，非 tab bar
- */
-import { useKernelStore } from "@chariot/kernel";
-import { switchWorkbenchModule } from "@chariot/kernel";
+import {
+  getWorkbenchModules,
+  switchWorkbenchModule,
+  useKernelStore,
+} from "@chariot/kernel";
 
-const MODULES = [
-  { id: "planner", name: "Planner", isCore: false },
-  { id: "hermit", name: "Hermit", isCore: true },
-  { id: "userkiller", name: "Userkiller", isCore: false },
-];
+const MODULE_ORDER = ["hermit", "planner", "userkiller"];
 
 export function PlanetDock() {
-  const activeModule = useKernelStore((s) => s.activeWorkbenchModule);
+  const activeModule = useKernelStore((state) => state.activeWorkbenchModule);
+  const modules = getWorkbenchModules().sort(
+    (left, right) =>
+      MODULE_ORDER.indexOf(left.id) - MODULE_ORDER.indexOf(right.id),
+  );
 
   return (
     <div
       style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "12px",
-        padding: "10px 16px",
-        background: "rgba(0,0,0,0.5)",
-        borderRadius: "24px",
-        border: "1px solid rgba(128,128,128,0.2)",
-        boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
+        display: "grid",
+        gap: "10px",
+        padding: "14px 16px",
+        borderRadius: "18px",
+        border: "1px solid var(--border-strong)",
+        background:
+          "linear-gradient(180deg, rgba(28,39,35,0.92) 0%, rgba(13,18,16,0.96) 100%)",
       }}
     >
-      {MODULES.map((m) => {
-        const isActive = activeModule === m.id;
+      <div className="chariot-microcopy">Planet Dock</div>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
+        {modules.map((module) => {
+          const isActive = activeModule === module.id;
+
         return (
           <button
-            key={m.id}
+            key={module.id}
             type="button"
-            onClick={() => switchWorkbenchModule(m.id)}
+            onClick={() => switchWorkbenchModule(module.id as "hermit" | "planner" | "userkiller")}
             style={{
-              padding: m.isCore ? "10px 20px" : "6px 14px",
-              borderRadius: "20px",
+              padding: module.id === "hermit" ? "10px 18px" : "8px 14px",
+              borderRadius: "999px",
               border: isActive
-                ? "1px solid rgba(100,150,255,0.6)"
-                : "1px solid rgba(128,128,128,0.25)",
+                ? "1px solid rgba(215,164,89,0.4)"
+                : "1px solid var(--border-strong)",
               background: isActive
-                ? "rgba(100,150,255,0.2)"
+                ? "rgba(215,164,89,0.16)"
                 : "rgba(255,255,255,0.04)",
               cursor: "pointer",
-              fontSize: m.isCore ? "14px" : "12px",
-              fontWeight: m.isCore ? 600 : 400,
+              fontSize: module.id === "hermit" ? "14px" : "12px",
+              fontWeight: module.id === "hermit" ? 600 : 500,
               color: "inherit",
             }}
           >
-            {m.name}
+            {module.name}
           </button>
         );
-      })}
+        })}
+      </div>
     </div>
   );
 }

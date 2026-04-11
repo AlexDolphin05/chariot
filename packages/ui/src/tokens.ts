@@ -1,10 +1,12 @@
-/**
- * @chariot/ui — 基础 design tokens
- */
 export const tokens = {
-  panelBorder: "1px solid rgba(128,128,128,0.2)",
-  panelBg: "rgba(255,255,255,0.02)",
-  panelRadius: "8px",
-  headerHeight: "48px",
-  hermitBarHeight: "56px",
+  panelBorder: "1px solid var(--border-strong)",
+  panelMutedBorder: "1px solid var(--border-soft)",
+  panelBg:
+    "linear-gradient(180deg, rgba(24, 34, 30, 0.92) 0%, rgba(16, 22, 20, 0.94) 100%)",
+  panelBgElevated:
+    "linear-gradient(180deg, rgba(34, 48, 42, 0.94) 0%, rgba(18, 25, 23, 0.98) 100%)",
+  panelRadius: "18px",
+  shellRadius: "24px",
+  headerHeight: "64px",
+  hermitBarHeight: "86px",
 };

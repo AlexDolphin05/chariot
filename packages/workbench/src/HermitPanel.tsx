@@ -1,48 +1,106 @@
-/**
- * @chariot/workbench — Workspace Hermit 面板
- * 基于当前 workspace / project map / sniff 的工作区 Hermit
- * 显示 context、suggestions、mock 回答区域
- */
+import { startTransition, useEffect, useState } from "react";
 import { useKernelStore } from "@chariot/kernel";
+import { runHermitInProjectScope } from "@chariot/module-hermit";
 import { PanelShell } from "@chariot/ui";
-import { mockProjectSniff } from "@chariot/module-hermit";
 
 export function HermitPanel() {
-  const activeWorkspaceId = useKernelStore((s) => s.activeWorkspaceId);
+  const activeWorkspaceId = useKernelStore((state) => state.activeWorkspaceId);
+  const workspaces = useKernelStore((state) => state.workspaces);
+  const workspace =
+    workspaces.find((candidate) => candidate.id === activeWorkspaceId) ?? null;
+  const sniff = workspace?.sniff;
+  const [answer, setAnswer] = useState(
+    "Project-scope Hermit will summarize the active workspace here.",
+  );
 
-  const sniff = activeWorkspaceId
-    ? mockProjectSniff(activeWorkspaceId)
-    : null;
+  useEffect(() => {
+    let isCancelled = false;
+
+    if (!activeWorkspaceId) {
+      setAnswer("Select a board card to activate project-scope Hermit.");
+      return;
+    }
+
+    void runHermitInProjectScope(
+      activeWorkspaceId,
+      "What capability should Alex extract first here?",
+    ).then((nextAnswer) => {
+      if (isCancelled) {
+        return;
+      }
+
+      startTransition(() => {
+        setAnswer(nextAnswer);
+      });
+    });
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [activeWorkspaceId]);
 
   return (
-    <PanelShell title="Workspace Hermit">
+    <PanelShell title="Hermit Panel">
       {sniff ? (
-        <div style={{ fontSize: "13px" }}>
-          <div style={{ fontWeight: 600, marginBottom: "6px" }}>Context</div>
-          <div style={{ marginBottom: "12px", color: "rgba(128,128,128,0.95)" }}>
-            {sniff.summary}
+        <div style={{ display: "grid", gap: "12px", fontSize: "13px" }}>
+          <div>
+            <div className="chariot-microcopy">Project Scope Context</div>
+            <div
+              style={{
+                marginTop: "6px",
+                color: "var(--text-muted)",
+                lineHeight: 1.5,
+              }}
+            >
+              {sniff.summary}
+            </div>
           </div>
-          <div style={{ fontWeight: 600, marginBottom: "6px" }}>Suggestions</div>
-          <div style={{ marginBottom: "12px", color: "rgba(128,128,128,0.9)" }}>
-            {sniff.suggestions.join("; ")}
+
+          <div>
+            <div className="chariot-microcopy">Entities</div>
+            <div className="chariot-status-row" style={{ marginTop: "8px" }}>
+              {sniff.entities.slice(0, 4).map((entity) => (
+                <span key={entity} className="chariot-chip">
+                  {entity}
+                </span>
+              ))}
+            </div>
           </div>
-          <div style={{ fontWeight: 600, marginBottom: "6px" }}>Mock Answer</div>
-          <div
-            style={{
-              padding: "10px",
-              background: "rgba(0,0,0,0.2)",
-              borderRadius: "6px",
-              fontSize: "12px",
-              color: "rgba(180,200,220,0.9)",
-            }}
-          >
-            [MOCK] Based on project context, consider completing task-1 before
-            task-2. Future: connect to HERMIT context builder.
+
+          <div>
+            <div className="chariot-microcopy">Risks</div>
+            <div
+              style={{
+                marginTop: "6px",
+                color: "var(--text-muted)",
+                lineHeight: 1.5,
+              }}
+            >
+              {sniff.risks[0] ?? "No project risk is registered yet."}
+            </div>
+          </div>
+
+          <div>
+            <div className="chariot-microcopy">Mock Runner Output</div>
+            <div
+              style={{
+                marginTop: "6px",
+                padding: "12px",
+                borderRadius: "14px",
+                border: "1px solid var(--border-strong)",
+                background: "rgba(255,255,255,0.04)",
+                lineHeight: 1.5,
+                color: "var(--accent-strong)",
+                whiteSpace: "pre-wrap",
+              }}
+            >
+              {answer}
+            </div>
           </div>
         </div>
       ) : (
-        <div style={{ color: "rgba(128,128,128,0.8)" }}>
-          Select a project to see Hermit context
+        <div style={{ color: "var(--text-muted)" }}>
+          Select a project to see workspace Hermit context.
         </div>
       )}
     </PanelShell>

@@ -1,6 +1,3 @@
-/**
- * @chariot/ui — 占位组件
- */
 type PlaceholderProps = {
   label: string;
   className?: string;
@@ -13,10 +10,11 @@ export function Placeholder({ label, className = "" }: PlaceholderProps) {
       style={{
         padding: "24px",
         textAlign: "center",
-        color: "rgba(128,128,128,0.8)",
+        color: "var(--text-muted)",
         fontSize: "14px",
-        border: "1px dashed rgba(128,128,128,0.3)",
-        borderRadius: "6px",
+        border: "1px dashed var(--border-strong)",
+        borderRadius: "14px",
+        background: "rgba(255, 255, 255, 0.02)",
       }}
     >
       {label}

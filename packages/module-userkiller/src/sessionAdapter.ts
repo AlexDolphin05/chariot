@@ -1,26 +1,38 @@
-/**
- * Userkiller Session Adapter 接口
- * 未来对接 userkiller Python 后端的 session_manager
- * 暂时只做接口壳和 mock
- */
+export type UserkillerSessionStatus =
+  | "idle"
+  | "executing"
+  | "completed"
+  | "error";
 
 export type UserkillerSession = {
   id: string;
   name: string;
+  workspaceId: string;
   workspacePath: string;
   outputPath: string;
-  status: "idle" | "executing" | "completed" | "error";
+  status: UserkillerSessionStatus;
+  summary: string;
+  templateCount: number;
 };
 
-/** MOCK: 打开 Userkiller workspace */
+export interface UserkillerSessionAdapter {
+  openUserkillerWorkspace(workspaceId: string): Promise<UserkillerSession>;
+}
+
 export async function openUserkillerWorkspace(
   workspaceId: string
 ): Promise<UserkillerSession> {
+  const workspaceLabel = workspaceId.replace("workspace-", "");
+
   return {
     id: `session-${workspaceId}`,
-    name: `[MOCK] Session for ${workspaceId}`,
+    name: `Userkiller ${workspaceLabel} bridge`,
+    workspaceId,
     workspacePath: `/mock/workspace/${workspaceId}`,
     outputPath: `/mock/output/${workspaceId}`,
     status: "idle",
+    summary:
+      "Mock session bridge ready. Future work: connect to session_manager.py and workflow_engine.py.",
+    templateCount: workspaceId === "workspace-userkiller" ? 4 : 2,
   };
 }

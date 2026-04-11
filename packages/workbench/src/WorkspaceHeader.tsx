@@ -1,45 +1,68 @@
-/**
- * @chariot/workbench — 工作区头部
- * 项目名 + Back to Board
- */
 import { useKernelStore } from "@chariot/kernel";
-import { backToBoard } from "@chariot/kernel";
 
 export function WorkspaceHeader() {
-  const activeWorkspaceId = useKernelStore((s) => s.activeWorkspaceId);
-  const workspaces = useKernelStore((s) => s.workspaces);
-  const activeProjectId = useKernelStore((s) => s.activeProjectId);
+  const activeWorkspaceId = useKernelStore((state) => state.activeWorkspaceId);
+  const activeProjectId = useKernelStore((state) => state.activeProjectId);
+  const activeWorkbenchModule = useKernelStore(
+    (state) => state.activeWorkbenchModule,
+  );
+  const projects = useKernelStore((state) => state.projects);
+  const workspaces = useKernelStore((state) => state.workspaces);
 
-  const workspace = workspaces.find((w) => w.id === activeWorkspaceId);
-  const title = workspace?.name ?? activeProjectId ?? "No project selected";
+  const activeProject =
+    projects.find((project) => project.id === activeProjectId) ?? null;
+  const workspace =
+    workspaces.find((candidate) => candidate.id === activeWorkspaceId) ?? null;
+  const sourcePath =
+    typeof workspace?.metadata.sourcePath === "string"
+      ? workspace.metadata.sourcePath
+      : null;
+  const role =
+    typeof workspace?.metadata.role === "string" ? workspace.metadata.role : null;
 
   return (
     <div
       style={{
-        padding: "12px 16px",
-        borderBottom: "1px solid rgba(128,128,128,0.2)",
+        border: "1px solid var(--border-strong)",
+        borderRadius: "18px",
+        background:
+          "linear-gradient(180deg, rgba(28,39,35,0.94) 0%, rgba(15,21,19,0.96) 100%)",
+        padding: "16px 18px",
         display: "flex",
-        alignItems: "center",
+        alignItems: "flex-start",
         justifyContent: "space-between",
         gap: "16px",
       }}
     >
-      <span style={{ fontSize: "16px", fontWeight: 600 }}>{title}</span>
-      <button
-        type="button"
-        onClick={backToBoard}
+      <div style={{ minWidth: 0 }}>
+        <div className="chariot-microcopy">Workbench / Workspace</div>
+        <div style={{ marginTop: "6px", fontSize: "28px", fontWeight: 700 }}>
+          {activeProject?.title ?? "Select a board card"}
+        </div>
+        <div
+          style={{
+            marginTop: "8px",
+            color: "var(--text-muted)",
+            lineHeight: 1.5,
+            maxWidth: "720px",
+          }}
+        >
+          {activeProject?.summary ??
+            "The right pane is the stable project workbench. Click a board card to bind project context, planner snapshot, and module host."}
+        </div>
+      </div>
+
+      <div
         style={{
-          padding: "6px 12px",
-          borderRadius: "6px",
-          border: "1px solid rgba(128,128,128,0.4)",
-          background: "rgba(255,255,255,0.05)",
-          cursor: "pointer",
-          fontSize: "13px",
-          color: "inherit",
+          minWidth: "220px",
+          display: "grid",
+          gap: "8px",
         }}
       >
-        Back to Board
-      </button>
+        <span className="chariot-chip">Active module: {activeWorkbenchModule}</span>
+        {role ? <span className="chariot-chip">{role}</span> : null}
+        {sourcePath ? <span className="chariot-chip">{sourcePath}</span> : null}
+      </div>
     </div>
   );
 }

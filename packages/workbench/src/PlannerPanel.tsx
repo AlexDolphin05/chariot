@@ -1,40 +1,54 @@
-/**
- * @chariot/workbench — Planner 面板
- * 基于当前 workspace 的 project scope
- */
 import { useKernelStore } from "@chariot/kernel";
 import { PanelShell } from "@chariot/ui";
-import { mockProjectPlannerSnapshot } from "@chariot/module-planner";
 
 export function PlannerPanel() {
-  const activeWorkspaceId = useKernelStore((s) => s.activeWorkspaceId);
-
-  const snapshot = activeWorkspaceId
-    ? mockProjectPlannerSnapshot(activeWorkspaceId)
-    : null;
+  const activeWorkspaceId = useKernelStore((state) => state.activeWorkspaceId);
+  const workspaces = useKernelStore((state) => state.workspaces);
+  const workspace =
+    workspaces.find((candidate) => candidate.id === activeWorkspaceId) ?? null;
+  const snapshot = workspace?.planner;
 
   return (
-    <PanelShell title="Planner">
+    <PanelShell title="Planner Panel">
       {snapshot ? (
-        <div style={{ fontSize: "13px" }}>
+        <div style={{ display: "grid", gap: "12px", fontSize: "13px" }}>
+          <div className="chariot-status-row">
+            <span className="chariot-chip">{snapshot.scope} scope</span>
+            <span className="chariot-chip">
+              {snapshot.conflicts.length} active conflicts
+            </span>
+          </div>
           {snapshot.conflicts.length > 0 ? (
-            <ul style={{ margin: 0, paddingLeft: "18px" }}>
-              {snapshot.conflicts.map((c) => (
-                <li key={c.id} style={{ marginBottom: "4px" }}>
-                  {c.message}
-                </li>
+            <div style={{ display: "grid", gap: "8px" }}>
+              {snapshot.conflicts.map((conflict) => (
+                <div
+                  key={conflict.id}
+                  style={{
+                    padding: "10px 12px",
+                    borderRadius: "12px",
+                    border: "1px solid var(--border-strong)",
+                    background: "rgba(255,255,255,0.03)",
+                    color: "var(--text-muted)",
+                    lineHeight: 1.5,
+                  }}
+                >
+                  {conflict.message}
+                </div>
               ))}
-            </ul>
+            </div>
           ) : (
-            <div>No conflicts</div>
+            <div style={{ color: "var(--text-muted)" }}>No conflicts right now.</div>
           )}
-          <div style={{ marginTop: "8px", fontSize: "11px", opacity: 0.7 }}>
-            [MOCK] Future: connect to emergency-planner
+          <div>
+            <div className="chariot-microcopy">Suggestions</div>
+            <div style={{ marginTop: "6px", color: "var(--accent-strong)", lineHeight: 1.5 }}>
+              {snapshot.suggestions[0]}
+            </div>
           </div>
         </div>
       ) : (
-        <div style={{ color: "rgba(128,128,128,0.8)" }}>
-          Select a project to see Planner
+        <div style={{ color: "var(--text-muted)" }}>
+          Select a project to see planner snapshot data.
         </div>
       )}
     </PanelShell>

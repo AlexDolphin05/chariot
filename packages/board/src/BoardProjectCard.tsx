@@ -1,43 +1,35 @@
-/**
- * @chariot/board — 项目卡片
- * 占位实现，完整视觉由 Tia 后续实现
- */
 import type { ChariotProjectCard } from "@chariot/types";
-import { openProject } from "@chariot/kernel";
+import { openProject, useKernelStore } from "@chariot/kernel";
+import { MapNode } from "@chariot/ui";
 
 type BoardProjectCardProps = {
   card: ChariotProjectCard;
 };
 
 export function BoardProjectCard({ card }: BoardProjectCardProps) {
-  const handleClick = () => {
-    // card.id = project id (one card per project on board)
-    openProject(card.id);
-  };
+  const activeProjectId = useKernelStore((state) => state.activeProjectId);
+  const isActive = activeProjectId === card.id;
 
   return (
-    <button
-      type="button"
-      onClick={handleClick}
+    <div
       style={{
-        padding: "12px 16px",
-        border: "1px solid rgba(128,128,128,0.3)",
-        borderRadius: "8px",
-        background: "rgba(255,255,255,0.03)",
-        cursor: "pointer",
-        textAlign: "left",
-        minWidth: "200px",
+        padding: isActive ? "2px" : "0",
+        borderRadius: "18px",
+        background: isActive
+          ? "linear-gradient(135deg, rgba(215,164,89,0.45), rgba(126,194,138,0.2))"
+          : "transparent",
+        transition: "transform 180ms ease",
+        transform: isActive ? "translateY(-2px)" : "translateY(0)",
       }}
     >
-      <div style={{ fontWeight: 600, marginBottom: "4px" }}>{card.title}</div>
-      {card.summary && (
-        <div style={{ fontSize: "12px", color: "rgba(128,128,128,0.9)" }}>
-          {card.summary}
-        </div>
-      )}
-      <div style={{ fontSize: "11px", marginTop: "6px", color: "rgba(128,128,128,0.7)" }}>
-        {card.status} · {card.tags.join(", ")}
-      </div>
-    </button>
+      <MapNode
+        title={card.title}
+        summary={card.summary}
+        tags={card.tags}
+        status={card.status}
+        onClick={() => openProject(card.id)}
+        hints={card.moduleHints?.map((hint) => `Module ${hint}`)}
+      />
+    </div>
   );
 }

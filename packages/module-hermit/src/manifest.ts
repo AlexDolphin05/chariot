@@ -5,4 +5,6 @@ export const hermitManifest: ChariotModuleManifest = {
   name: "Hermit",
   kind: "core",
   supports: ["board", "workbench"],
+  description:
+    "Context building, sniff snapshots, and workspace interpretation adapters.",
 };

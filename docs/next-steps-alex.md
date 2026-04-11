@@ -1,32 +1,85 @@
-# Alex 下一步工作
+# Next Steps For Alex
 
-## 优先修改的文件
+## 第一优先级
 
-1. **packages/module-hermit** — 从 HERMIT 抽取 `contextAssembler`、`profileBuilder`、`deepSniff` 能力，替换 mock
-2. **packages/module-planner** — 从 emergency-planner 抽取 `autoBlocks`、`checkTimeConflicts`、`scheduler` 能力，替换 mock
-3. **packages/kernel** — 完善 snapshot sync helpers，连接 Hermit/Planner 模块与 workspace 状态
+先把真实能力一点点替换掉当前 mock，而不是继续扩展壳层 UI。
 
-## 从 HERMIT 先抽的能力
+建议顺序：
 
-- `contextAssembler.ts` — 分层上下文 (system/project/memory/task)
-- `profileBuilder.ts` — ProjectProfile → LLM 上下文字符串
-- `search/retrieve.ts` — 检索管道
-- `docparse.ts` — 文档解析（可选，按需）
+1. Hermit context builder
+2. Planner conflict semantics
+3. Userkiller session/artifact bridge
+4. Workbench 的真实数据展示
 
-## 从 emergency-planner 先抽的能力
+## 你接下来优先改哪些文件
 
-- `planningWindow.ts` — 规划窗口、日边界
-- `autoBlocks.ts` — 时间块、`checkTimeConflicts`
-- `scheduler.ts` — 硬约束调度
+### Hermit
 
-## 与 Tia 对接
+- `packages/module-hermit/src/contextBuilder.ts`
+- `packages/module-hermit/src/runner.ts`
+- `packages/kernel/src/snapshotSync.ts`
 
-- **Board 区**：当前为占位骨架。Tia 负责项目卡片/post-it 的完整视觉、画布交互、Global Planner Overlay 的展示。
-- **Project Map**：当前为占位。Tia 负责地图/依赖图视觉。
-- **契约**：保持 `ChariotProjectCard`、`SniffSnapshot`、`PlannerSnapshot` 等类型稳定，Tia 的 UI 消费这些数据即可。
+先把 HERMIT 的真实 context 层接进 `SniffSnapshot`。
 
-## 后续模块接入顺序建议
+### Planner
 
-1. Hermit — 先接 context building，再接 LLM
-2. Planner — 先接 conflict detection，再接 scheduler
-3. Userkiller — 保持 adapter 接口，待 Python 后端可调用时再实现 bridge
+- `packages/module-planner/src/snapshotBuilder.ts`
+- `packages/module-planner/src/conflictDetector.ts`
+- `packages/workbench/src/PlannerPanel.tsx`
+
+先把 emergency-planner 的纯语义接进 `PlannerSnapshot`。
+
+### Userkiller
+
+- `packages/module-userkiller/src/sessionAdapter.ts`
+- `packages/module-userkiller/src/artifactLoader.ts`
+- `packages/workbench/src/ModuleHost.tsx`
+
+先把 userkiller 的 session / artifact surface 接进来，不碰执行核心。
+
+## 从三个源项目该先抽什么
+
+### 从 HERMIT 先抽
+
+- `contextAssembler.ts`
+- `profileBuilder.ts`
+- `deepSniff.ts`
+
+目标是让 `buildWorkspaceHermitContext()` 和 `buildBoardHermitContext()` 不再只是 mock。
+
+### 从 emergency-planner 先抽
+
+- `planningWindow.ts`
+- `autoBlocks.ts`
+- `scheduler.ts`
+
+目标是让 `detectGlobalConflicts()` / `detectProjectConflicts()` 先变成真实语义，再考虑更复杂的排程。
+
+### 从 userkiller 先抽
+
+- `session_manager.py`
+- `template_manager.py`
+- `modules/file_reader.py`
+
+目标是补齐 adapter，而不是重写 workflow engine。
+
+## 你和 Tia 的对接点
+
+当前最适合稳定下来给 Tia 用的接口是：
+
+- `ChariotProjectCard`
+- `SniffSnapshot`
+- `PlannerSnapshot`
+- `ChariotModuleManifest`
+- `ChariotEvent`
+
+Tia 接手 Board 视觉时，最好只消费这些 contract，不直接依赖源项目内部结构。
+
+## 一个实际可执行的下一轮工作包
+
+如果只做一轮高性价比迭代，建议是：
+
+1. 把 HERMIT 的 `contextAssembler` 适配进 `module-hermit`
+2. 把 emergency-planner 的 `autoBlocks` + `checkTimeConflicts` 适配进 `module-planner`
+3. 保持 userkiller 继续 adapter-only
+4. 让 `Workbench` 面板从 mock 文本升级为真实 snapshot 内容

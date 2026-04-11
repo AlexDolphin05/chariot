@@ -75,6 +75,9 @@ importers:
       '@chariot/kernel':
         specifier: workspace:*
         version: link:../kernel
+      '@chariot/module-hermit':
+        specifier: workspace:*
+        version: link:../module-hermit
       '@chariot/module-planner':
         specifier: workspace:*
         version: link:../module-planner

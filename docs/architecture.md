@@ -1,83 +1,149 @@
-# Chariot 架构
+# Chariot Architecture
 
-## 空间模型（非 dashboard）
+## 总体结构
 
-Chariot 是统一空间界面，不是左右平铺的后台管理界面：
+Chariot 当前是一个统一前端壳，而不是三个应用的拼装页。
 
-- **Board** = 全局画布，不是 sidebar。项目对象散布在画布上。
-- **Project Map** = 局部地图主区域，不是辅助信息卡。在 Workspace Mode 中占据中央。
-- **Hermit** = 系统认知层：Global Hermit Bar（底部常驻）+ Workspace Hermit 面板，不是单个输入框。
-- **Planner** = 系统约束层：Global Planner Overlay（Board 模式）+ Project Planner Panel（Workspace 模式），不是单页 tab。
-
-## 总体架构
+运行中的主结构如下：
 
 ```mermaid
-flowchart TB
-    subgraph apps [Apps]
-        Web[apps/web]
-    end
+flowchart LR
+    Web["apps/web"]
+    Board["packages/board"]
+    Workbench["packages/workbench"]
+    Kernel["packages/kernel"]
+    Hermit["packages/module-hermit"]
+    Planner["packages/module-planner"]
+    Userkiller["packages/module-userkiller"]
+    Types["packages/types"]
 
-    subgraph shell [Shell]
-        TopBar[TopBar]
-        MainViewport[MainViewport]
-        GlobalHermitBar[GlobalHermitBar]
-        PlanetDock[PlanetDock]
-    end
-
-    subgraph board [Board Mode]
-        BoardCanvasView[BoardCanvasView]
-        BoardProjectCard[BoardProjectCard]
-        GlobalPlannerOverlay[GlobalPlannerOverlay]
-    end
-
-    subgraph workspace [Workspace Mode]
-        WorkspaceView[WorkspaceView]
-        ProjectMapView[ProjectMapView]
-        HermitPanel[HermitPanel]
-        PlannerPanel[PlannerPanel]
-        ModuleHost[ModuleHost]
-    end
-
-    subgraph kernel [Kernel]
-        Store[Zustand Store]
-        EventBus[EventBus]
-        AppViewMode[appViewMode]
-        WorkspaceRuntime[WorkspaceRuntime]
-    end
-
-    Web --> MainViewport
-    MainViewport -->|board| BoardCanvasView
-    MainViewport -->|workspace| WorkspaceView
-    BoardCanvasView --> Store
-    WorkspaceView --> Store
-    WorkspaceView --> ProjectMapView
-    WorkspaceView --> HermitPanel
-    WorkspaceView --> ModuleHost
-    Store --> AppViewMode
+    Web --> Board
+    Web --> Workbench
+    Web --> Kernel
+    Board --> Kernel
+    Board --> Hermit
+    Board --> Planner
+    Workbench --> Kernel
+    Workbench --> Hermit
+    Workbench --> Planner
+    Workbench --> Userkiller
+    Kernel --> Types
+    Hermit --> Types
+    Planner --> Types
+    Userkiller --> Types
 ```
 
-## Board Mode 与 Workspace Mode
+## 运行中的界面分区
 
-- **Board Mode**（默认）：MainViewport 渲染 BoardCanvasView。画布上散布项目节点，右下角 Global Planner Overlay。点击项目进入 Workspace Mode。
-- **Workspace Mode**：MainViewport 渲染 WorkspaceView。Project Map 主区域，Workspace Hermit 右侧常驻，Planet Dock 切换 Planner/Userkiller。底部 Global Hermit Bar 常驻。Back to Board 返回。
+### Board
 
-## Board / Workspace / Kernel / Modules 的关系
+左侧是 `BoardPane`。
 
-- **Board**：全局画布，项目对象散布，非侧边列表。Global Planner Overlay 显示全局冲突与建议。
-- **Workspace**：进入项目后的空间。Project Map 占据主区域，Workspace Hermit 常驻，Planner/Userkiller 为次级模块。
-- **Kernel**：appViewMode（board | workspace）、projects、workspaces、activeIds、事件总线、模块注册表。
-- **Modules**：hermit、planner、userkiller 通过 ModuleRegistry 注册。Planet Dock 为模块轨道切换器，非 tab bar。
+它当前负责：
+
+- 展示 `ProjectCard`
+- 承担全局项目切换入口
+- 显示全局 Planner overlay
+- 承担底部 `Global Hermit` 的 board-scope 入口
+
+它当前不负责：
+
+- 完整视觉系统
+- post-it 动画
+- 复杂画布交互
+
+### Workbench
+
+右侧是 `WorkbenchPane`。
+
+它当前负责：
+
+- 显示当前 active project / workspace
+- 展示 `ProjectMapPanel`
+- 展示 `HermitPanel`
+- 展示 `PlannerPanel`
+- 通过 `PlanetDock` + `ModuleHost` 暴露 `Userkiller` 入口
+
+## Kernel 的角色
+
+`packages/kernel` 是当前壳层的运行核心。
+
+它负责：
+
+- Zustand store
+- 事件总线
+- module registry
+- workspace runtime
+- snapshot sync helpers
+
+当前 store 最关键的状态是：
+
+- `projects`
+- `workspaces`
+- `activeProjectId`
+- `activeWorkspaceId`
+- `activeWorkbenchModule`
+- `globalHermitInput`
+
+## Board / Workbench / Modules 的关系
+
+### Board -> Kernel
+
+Board 通过 runtime 打开项目并切换当前 workspace。
+
+### Workbench -> Kernel
+
+Workbench 从 kernel 读取 active project / workspace，并在同一套状态上渲染 Hermit、Planner 和 ModuleHost。
+
+### Modules -> Kernel
+
+模块当前不直接控制页面，而是通过 manifest、snapshot builder、runner 和 adapter contract 为壳层供给能力。
 
 ## Hermit 双作用域
 
-- **Global Hermit Bar**：底部常驻，Board/Workspace 模式均存在。Board 模式下回答全局问题。
-- **Workspace Hermit 面板**：Workspace 模式中基于当前 project map / sniff 工作，显示 context、suggestions、mock 回答。
+当前已经为两种作用域留好入口：
+
+- `board scope`
+  - 入口：`GlobalHermitBar`
+  - builder：`buildBoardHermitContext()`
+  - runner：`runHermitInBoardScope()`
+
+- `project scope`
+  - 入口：`HermitPanel`
+  - builder：`buildWorkspaceHermitContext(workspaceId)`
+  - runner：`runHermitInProjectScope(workspaceId, question)`
+
+这意味着后续接入真实 HERMIT 能力时，不会把认知逻辑绑死在“当前项目唯一上下文”上。
 
 ## Planner 双作用域
 
-- **Global Planner Overlay**：Board 模式中 overlay/inspector，显示全局冲突数、建议、受影响项目。
-- **Project Planner Panel**：Workspace 模式中次级模块面板，显示当前项目冲突与建议。
+Planner 也按两种作用域拆开：
+
+- `global scope`
+  - 入口：`GlobalPlannerOverlay`
+  - builder：`buildGlobalPlanningSnapshot()`
+  - detector：`detectGlobalConflicts()`
+
+- `project scope`
+  - 入口：`PlannerPanel`
+  - builder：`buildProjectPlanningSnapshot(workspaceId)`
+  - detector：`detectProjectConflicts(workspaceId)`
+
+这样后续可以让 Board 做跨项目冲突感知，让 Workbench 做项目内排程解释。
 
 ## 为什么先统一模型再统一功能
 
-第一阶段重点：定义 ChariotProjectCard、ChariotWorkspace、SniffSnapshot、PlannerSnapshot、ChariotModuleManifest、ChariotEvent 等共享类型。Board 与 Project Map 共享 MapNode 基础模型。这些 contract 是后续从 HERMIT、emergency-planner 抽取能力的基础。
+当前阶段不追求完整业务，而追求稳定的共享 contract。
+
+原因很简单：
+
+- 三个源项目的数据模型并不一致
+- 页面直接复用会把旧假设一起带进来
+- UI 先行会把壳层绑死在旧页面结构上
+
+因此第一阶段的优先级是：
+
+1. 统一 `ProjectCard / Workspace / Snapshot / Event / Module Manifest`
+2. 建好 `Kernel`
+3. 建好可运行壳层
+4. 再逐步把真实能力从源项目抽进来
