@@ -45,6 +45,14 @@ type CopyKey =
   | "workbench.selectProject"
   | "workbench.description"
   | "workbench.activeModule"
+  | "workbench.constellationTitle"
+  | "workbench.constellationSubtitle"
+  | "workbench.hermitCore"
+  | "workbench.mapOrbit"
+  | "workbench.plannerOrbit"
+  | "workbench.userkillerOrbit"
+  | "workbench.focusedView"
+  | "workbench.mapFallback"
   | "hermit.panelTitle"
   | "hermit.context"
   | "hermit.entities"
@@ -126,6 +134,14 @@ const copy: Record<ChariotLocale, Record<CopyKey, string>> = {
     "workbench.selectProject": "选择一个 Board 项目",
     "workbench.description": "右侧是稳定的项目工作区。点击左侧项目卡后，会绑定当前项目上下文、Planner 快照和模块入口。",
     "workbench.activeModule": "当前模块：{name}",
+    "workbench.constellationTitle": "Hermit 恒星系",
+    "workbench.constellationSubtitle": "以 Hermit 为核心，Planner、Project Map 与 Userkiller 围绕当前项目上下文运转。",
+    "workbench.hermitCore": "Hermit Core",
+    "workbench.mapOrbit": "Project Map",
+    "workbench.plannerOrbit": "Planner",
+    "workbench.userkillerOrbit": "Userkiller",
+    "workbench.focusedView": "当前聚焦：{name}",
+    "workbench.mapFallback": "Project Map 会在这里继续承接项目结构、关系和视觉地图能力。",
     "hermit.panelTitle": "Hermit 面板",
     "hermit.context": "项目作用域上下文",
     "hermit.entities": "实体",
@@ -204,6 +220,14 @@ const copy: Record<ChariotLocale, Record<CopyKey, string>> = {
     "workbench.selectProject": "Select a board card",
     "workbench.description": "The right pane is the stable project workbench. Click a board card to bind project context, planner snapshot, and module host.",
     "workbench.activeModule": "Active module: {name}",
+    "workbench.constellationTitle": "Hermit Constellation",
+    "workbench.constellationSubtitle": "Hermit stays at the core while Planner, Project Map, and Userkiller orbit the active project context.",
+    "workbench.hermitCore": "Hermit Core",
+    "workbench.mapOrbit": "Project Map",
+    "workbench.plannerOrbit": "Planner",
+    "workbench.userkillerOrbit": "Userkiller",
+    "workbench.focusedView": "Focused view: {name}",
+    "workbench.mapFallback": "Project Map remains the place for structure, relations, and future visual mapping.",
     "hermit.panelTitle": "Hermit Panel",
     "hermit.context": "Project Scope Context",
     "hermit.entities": "Entities",

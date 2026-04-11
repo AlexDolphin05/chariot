@@ -7,3 +7,7 @@ export { ProjectMapPanel } from "./ProjectMapPanel";
 export { ProjectMapView } from "./ProjectMapView";
 export { PlanetDock } from "./PlanetDock";
 export { ModuleHost } from "./ModuleHost";
+export {
+  WorkbenchConstellation,
+  type WorkbenchOrbitView,
+} from "./WorkbenchConstellation";
