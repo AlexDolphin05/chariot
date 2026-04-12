@@ -11,4 +11,8 @@ export {
   runHermitInBoardScope,
   runHermitInProjectScope,
 } from "./runner";
+export {
+  buildCompiledHermitPrompt,
+  requestCompiledHermitPrompt,
+} from "./compiler";
 export { mockBoardSniff, mockProjectSniff } from "./mockData";

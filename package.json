@@ -4,7 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "pnpm --filter web dev",
+    "dev": "pnpm --parallel --filter prompt-service --filter web dev",
+    "dev:web": "pnpm --filter web dev",
+    "dev:service": "pnpm --filter prompt-service dev",
     "build": "pnpm -r run build",
     "check": "pnpm -r run check"
   },

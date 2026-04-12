@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { switchWorkbenchModule, useKernelStore } from "@chariot/kernel";
+import { HermitPanel } from "./HermitPanel";
 import { ModuleHost } from "./ModuleHost";
 import { PlannerPanel } from "./PlannerPanel";
-import { PlanetDock } from "./PlanetDock";
 import { ProjectMapPanel } from "./ProjectMapPanel";
 import {
   WorkbenchConstellation,
@@ -44,20 +44,7 @@ export function WorkbenchPane() {
   }
 
   const focusPanel =
-    activeOrbit === "planner" ? (
-      <PlannerPanel />
-    ) : activeOrbit === "userkiller" ? (
-      <ModuleHost />
-    ) : (
-      <ProjectMapPanel />
-    );
-
-  const supportPanels =
-    activeOrbit === "planner"
-      ? [<ProjectMapPanel key="map" />, <ModuleHost key="module-host" />]
-      : activeOrbit === "userkiller"
-        ? [<ProjectMapPanel key="map" />, <PlannerPanel key="planner" />]
-        : [<PlannerPanel key="planner" />, <ModuleHost key="module-host" />];
+    activeOrbit === "planner" ? <PlannerPanel /> : activeOrbit === "userkiller" ? <ModuleHost /> : activeOrbit === "map" ? <ProjectMapPanel /> : <HermitPanel />;
 
   return (
     <section
@@ -74,12 +61,8 @@ export function WorkbenchPane() {
           activeOrbit={activeOrbit}
           onSelectOrbit={handleSelectOrbit}
         />
-        <div className="chariot-constellation-detail-grid">
-          <div className="chariot-constellation-focus-panel">{focusPanel}</div>
-          <aside className="chariot-constellation-support-stack">
-            <PlanetDock />
-            {supportPanels}
-          </aside>
+        <div className="chariot-detail-panel-shell">
+          {focusPanel}
         </div>
       </div>
     </section>

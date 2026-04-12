@@ -1,246 +1,190 @@
 import { useEffect, useState } from "react";
 import { useChariotI18n, useKernelStore } from "@chariot/kernel";
 import {
-  getLegacyBridgeNotes,
-  loadAutomationArtifacts,
+  getAutomationTemplates,
   openUserkillerWorkspace,
-  resumeAutomationSession,
-  type AutomationArtifact,
-  type ResumeAutomationResult,
+  runAutomationTemplate,
+  type UserkillerAutomationTemplate,
   type UserkillerSession,
 } from "@chariot/module-userkiller";
 import { PanelShell } from "@chariot/ui";
 
 export function ModuleHost() {
-  const { locale, t } = useChariotI18n();
-  const activeModule = useKernelStore((state) => state.activeWorkbenchModule);
+  const { locale } = useChariotI18n();
   const activeWorkspaceId = useKernelStore((state) => state.activeWorkspaceId);
+  const automationRunsByWorkspace = useKernelStore(
+    (state) => state.automationRunsByWorkspace,
+  );
+  const appendAutomationRun = useKernelStore((state) => state.appendAutomationRun);
+
   const [session, setSession] = useState<UserkillerSession | null>(null);
-  const [resumeResult, setResumeResult] =
-    useState<ResumeAutomationResult | null>(null);
-  const [artifacts, setArtifacts] = useState<AutomationArtifact[]>([]);
-  const [isLoadingBridge, setIsLoadingBridge] = useState(false);
-
-  async function loadBridge(workspaceId: string): Promise<void> {
-    setIsLoadingBridge(true);
-
-    try {
-      const nextSession = await openUserkillerWorkspace(workspaceId, locale);
-      const [nextResumeResult, nextArtifacts] = await Promise.all([
-        resumeAutomationSession(nextSession.id, locale),
-        loadAutomationArtifacts(nextSession.id, locale),
-      ]);
-
-      setSession(nextSession);
-      setResumeResult(nextResumeResult);
-      setArtifacts(nextArtifacts);
-    } finally {
-      setIsLoadingBridge(false);
-    }
-  }
+  const [selectedTemplateId, setSelectedTemplateId] = useState("follow-up-draft");
+  const [brief, setBrief] = useState("");
+  const [isRunning, setIsRunning] = useState(false);
 
   useEffect(() => {
-    let isCancelled = false;
-
-    if (activeModule !== "userkiller" || !activeWorkspaceId) {
+    if (!activeWorkspaceId) {
       setSession(null);
-      setResumeResult(null);
-      setArtifacts([]);
-      setIsLoadingBridge(false);
       return;
     }
 
-    setIsLoadingBridge(true);
+    void openUserkillerWorkspace(activeWorkspaceId, locale).then(setSession);
+  }, [activeWorkspaceId, locale]);
 
-    void openUserkillerWorkspace(activeWorkspaceId, locale).then(
-      async (nextSession) => {
-        if (isCancelled) {
-          return;
-        }
+  const templates = getAutomationTemplates(locale);
+  const runs = activeWorkspaceId
+    ? automationRunsByWorkspace[activeWorkspaceId] ?? []
+    : [];
+  const latestRun = runs[0] ?? null;
+  const activeTemplate =
+    templates.find((template) => template.id === selectedTemplateId) ?? templates[0];
 
-        const [nextResumeResult, nextArtifacts] = await Promise.all([
-          resumeAutomationSession(nextSession.id, locale),
-          loadAutomationArtifacts(nextSession.id, locale),
-        ]);
+  async function handleRun(template: UserkillerAutomationTemplate) {
+    if (!activeWorkspaceId) {
+      return;
+    }
 
-        if (isCancelled) {
-          setIsLoadingBridge(false);
-          return;
-        }
+    setIsRunning(true);
 
-        setSession(nextSession);
-        setResumeResult(nextResumeResult);
-        setArtifacts(nextArtifacts);
-        setIsLoadingBridge(false);
-      },
-    );
+    try {
+      const run = await runAutomationTemplate(
+        activeWorkspaceId,
+        template.id,
+        brief,
+        locale,
+      );
 
-    return () => {
-      isCancelled = true;
-    };
-  }, [activeModule, activeWorkspaceId, locale]);
+      appendAutomationRun(run);
+      setBrief("");
+    } finally {
+      setIsRunning(false);
+    }
+  }
 
-  const legacyBridgeNotes = getLegacyBridgeNotes(locale);
-
-  switch (activeModule) {
-    case "hermit":
-      return (
-        <PanelShell title={t("moduleHost.title")}>
-          <div style={{ display: "grid", gap: "10px", fontSize: "13px" }}>
-            <div style={{ color: "var(--text-muted)", lineHeight: 1.5 }}>
-              {t("moduleHost.hermitFocus")}
+  return (
+    <PanelShell title={locale === "zh-CN" ? "Userkiller Desk" : "Userkiller Desk"}>
+      {activeWorkspaceId ? (
+        <div style={{ display: "grid", gap: "16px", fontSize: "13px" }}>
+          <div className="chariot-detail-header">
+            <div>
+              <div className="chariot-microcopy">
+                {locale === "zh-CN" ? "Automation Office" : "Automation Office"}
+              </div>
+              <div className="chariot-detail-title">
+                {locale === "zh-CN" ? "自动办公台" : "Automation Desk"}
+              </div>
+            </div>
+            <div className="chariot-status-row">
+              {session ? <span className="chariot-chip">{session.name}</span> : null}
+              <span className="chariot-chip">
+                {locale === "zh-CN" ? `${runs.length} 次运行` : `${runs.length} runs`}
+              </span>
             </div>
           </div>
-        </PanelShell>
-      );
-    case "planner":
-      return (
-        <PanelShell title={t("moduleHost.title")}>
-          <div style={{ display: "grid", gap: "10px", fontSize: "13px" }}>
-            <div style={{ color: "var(--text-muted)", lineHeight: 1.5 }}>
-              {t("moduleHost.plannerFocus")}
+
+          <div className="chariot-soft-block">
+            <div className="chariot-soft-copy">
+              {session?.summary ??
+                (locale === "zh-CN"
+                  ? "这里负责模板、文稿和自动生成产物。"
+                  : "This desk is responsible for templates, drafts, and generated outputs.")}
             </div>
           </div>
-        </PanelShell>
-      );
-    case "userkiller":
-      return (
-        <PanelShell title={t("moduleHost.title")}>
-          <div style={{ display: "grid", gap: "12px", fontSize: "13px" }}>
+
+          <div className="chariot-quiet-grid">
+            {templates.map((template) => {
+              const isActive = template.id === selectedTemplateId;
+
+              return (
+                <button
+                  key={template.id}
+                  type="button"
+                  onClick={() => setSelectedTemplateId(template.id)}
+                  className={`chariot-template-card${isActive ? " is-active" : ""}`}
+                >
+                  <div className="chariot-microcopy">{template.outputLabel}</div>
+                  <div className="chariot-history-question" style={{ marginTop: "8px" }}>
+                    {template.name}
+                  </div>
+                  <div className="chariot-soft-copy" style={{ marginTop: "8px" }}>
+                    {template.description}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="chariot-soft-block">
             <div className="chariot-microcopy">
-              {t("moduleHost.userkillerTitle")}
+              {locale === "zh-CN" ? "自动化 Brief" : "Automation Brief"}
             </div>
-            <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+            <textarea
+              value={brief}
+              onChange={(event) => setBrief(event.target.value)}
+              placeholder={
+                locale === "zh-CN"
+                  ? "描述这次自动办公要处理的内容、收件人或语气。"
+                  : "Describe what this automation should handle, who it's for, and the tone."
+              }
+              rows={4}
+              className="chariot-input"
+              style={{ marginTop: "10px" }}
+            />
+            <div className="chariot-action-row" style={{ marginTop: "12px" }}>
               <button
                 type="button"
-                disabled={!activeWorkspaceId || isLoadingBridge}
-                onClick={() =>
-                  activeWorkspaceId ? void loadBridge(activeWorkspaceId) : null
-                }
-                style={{
-                  padding: "8px 12px",
-                  borderRadius: "12px",
-                  border: "1px solid rgba(215,164,89,0.35)",
-                  background: "rgba(215,164,89,0.12)",
-                  color: "var(--accent-strong)",
-                  cursor:
-                    !activeWorkspaceId || isLoadingBridge
-                      ? "not-allowed"
-                      : "pointer",
-                }}
+                className="chariot-primary-button"
+                onClick={() => void handleRun(activeTemplate)}
               >
-                {isLoadingBridge ? t("moduleHost.loading") : t("moduleHost.reload")}
+                {isRunning
+                  ? locale === "zh-CN"
+                    ? "生成中…"
+                    : "Generating..."
+                  : locale === "zh-CN"
+                    ? `运行 ${activeTemplate.name}`
+                    : `Run ${activeTemplate.name}`}
               </button>
-              {session ? (
-                <span className="chariot-chip">
-                  {t("moduleHost.templateCount", {
-                    count: session.templateCount,
-                  })}
-                </span>
-              ) : null}
-            </div>
-            <div style={{ color: "var(--text-muted)", lineHeight: 1.5 }}>
-              {session?.summary ?? t("moduleHost.userkillerFallback")}
-            </div>
-            {resumeResult ? (
-              <div style={{ display: "grid", gap: "6px" }}>
-                <div className="chariot-microcopy">
-                  {t("moduleHost.bridgeStatus")}
-                </div>
-                <div className="chariot-chip">{resumeResult.status}</div>
-              </div>
-            ) : null}
-            {session ? (
-              <div style={{ display: "grid", gap: "8px" }}>
-                <div
-                  style={{
-                    padding: "10px 12px",
-                    borderRadius: "12px",
-                    border: "1px solid var(--border-strong)",
-                    background: "rgba(255,255,255,0.03)",
-                  }}
-                >
-                  <div className="chariot-microcopy">
-                    {t("moduleHost.workspacePath")}
-                  </div>
-                  <div style={{ marginTop: "6px", color: "var(--text-muted)" }}>
-                    {session.workspacePath}
-                  </div>
-                </div>
-                <div
-                  style={{
-                    padding: "10px 12px",
-                    borderRadius: "12px",
-                    border: "1px solid var(--border-strong)",
-                    background: "rgba(255,255,255,0.03)",
-                  }}
-                >
-                  <div className="chariot-microcopy">
-                    {t("moduleHost.outputPath")}
-                  </div>
-                  <div style={{ marginTop: "6px", color: "var(--text-muted)" }}>
-                    {session.outputPath}
-                  </div>
-                </div>
-              </div>
-            ) : null}
-            <div style={{ display: "grid", gap: "8px" }}>
-              <div className="chariot-microcopy">{t("moduleHost.artifacts")}</div>
-              {artifacts.length > 0 ? (
-                <div style={{ display: "grid", gap: "8px" }}>
-                  {artifacts.map((artifact) => (
-                    <div
-                      key={artifact.id}
-                      style={{
-                        padding: "10px 12px",
-                        borderRadius: "12px",
-                        border: "1px solid var(--border-strong)",
-                        background: "rgba(255,255,255,0.03)",
-                        color: "var(--text-muted)",
-                        lineHeight: 1.5,
-                      }}
-                    >
-                      <div
-                        style={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          gap: "12px",
-                          flexWrap: "wrap",
-                        }}
-                      >
-                        <strong style={{ color: "var(--text-strong)" }}>
-                          {artifact.name}
-                        </strong>
-                        <span className="chariot-chip">{artifact.type}</span>
-                      </div>
-                      <div style={{ marginTop: "6px" }}>{artifact.summary}</div>
-                      <div style={{ marginTop: "6px", fontSize: "12px" }}>
-                        {artifact.path}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div style={{ color: "var(--text-muted)" }}>
-                  {t("moduleHost.noArtifacts")}
-                </div>
-              )}
-            </div>
-            <div style={{ display: "grid", gap: "6px" }}>
-              <div className="chariot-microcopy">{t("moduleHost.bridgeNotes")}</div>
-              {legacyBridgeNotes.map((note) => (
-                <div
-                  key={note}
-                  style={{ color: "var(--accent-strong)", lineHeight: 1.5 }}
-                >
-                  {note}
-                </div>
-              ))}
             </div>
           </div>
-        </PanelShell>
-      );
-    default:
-      return null;
-  }
+
+          <div className="chariot-soft-block">
+            <div className="chariot-microcopy">
+              {locale === "zh-CN" ? "最新产物" : "Latest Output"}
+            </div>
+            {latestRun ? (
+              <div style={{ display: "grid", gap: "12px", marginTop: "10px" }}>
+                <div className="chariot-status-row">
+                  <span className="chariot-chip">{latestRun.templateName}</span>
+                  <span className="chariot-chip">
+                    {locale === "zh-CN" ? "已完成" : "Completed"}
+                  </span>
+                </div>
+                {latestRun.artifacts.map((artifact) => (
+                  <div key={artifact.id} className="chariot-history-item">
+                    <div className="chariot-history-question">{artifact.name}</div>
+                    <div className="chariot-soft-copy">{artifact.summary}</div>
+                    <pre className="chariot-preflight-copy" style={{ marginTop: "10px" }}>
+                      {artifact.content}
+                    </pre>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="chariot-soft-copy">
+                {locale === "zh-CN"
+                  ? "运行一个模板后，产物会显示在这里。"
+                  : "Run a template and the generated artifacts will appear here."}
+              </div>
+            )}
+          </div>
+        </div>
+      ) : (
+        <div style={{ color: "var(--text-muted)" }}>
+          {locale === "zh-CN"
+            ? "选择项目后可打开自动办公台。"
+            : "Select a project to open the automation desk."}
+        </div>
+      )}
+    </PanelShell>
+  );
 }

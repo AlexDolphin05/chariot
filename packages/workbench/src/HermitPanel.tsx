@@ -1,11 +1,16 @@
 import { startTransition, useEffect, useMemo, useState } from "react";
 import { useChariotI18n, useKernelStore } from "@chariot/kernel";
-import { runHermitInProjectScope } from "@chariot/module-hermit";
+import {
+  requestCompiledHermitPrompt,
+  runHermitInProjectScope,
+} from "@chariot/module-hermit";
 import { PanelShell } from "@chariot/ui";
 
 export function HermitPanel() {
   const { locale, t } = useChariotI18n();
+  const activeProjectId = useKernelStore((state) => state.activeProjectId);
   const activeWorkspaceId = useKernelStore((state) => state.activeWorkspaceId);
+  const projects = useKernelStore((state) => state.projects);
   const workspaces = useKernelStore((state) => state.workspaces);
   const workspaceHermitInput = useKernelStore(
     (state) => state.workspaceHermitInput,
@@ -13,21 +18,33 @@ export function HermitPanel() {
   const workspaceHermitHistory = useKernelStore(
     (state) => state.workspaceHermitHistory,
   );
+  const compiledPromptsByWorkspace = useKernelStore(
+    (state) => state.compiledPromptsByWorkspace,
+  );
   const setWorkspaceHermitInput = useKernelStore(
     (state) => state.setWorkspaceHermitInput,
   );
   const appendWorkspaceHermitExchange = useKernelStore(
     (state) => state.appendWorkspaceHermitExchange,
   );
+  const setCompiledPrompt = useKernelStore((state) => state.setCompiledPrompt);
+
   const workspace =
     workspaces.find((candidate) => candidate.id === activeWorkspaceId) ?? null;
-  const sniff = workspace?.sniff;
+  const project =
+    projects.find((candidate) => candidate.id === activeProjectId) ?? null;
   const history = activeWorkspaceId
     ? workspaceHermitHistory[activeWorkspaceId] ?? []
     : [];
+  const compiledPrompt = activeWorkspaceId
+    ? compiledPromptsByWorkspace[activeWorkspaceId] ?? null
+    : null;
   const latestExchange = history.at(-1) ?? null;
+
   const [answer, setAnswer] = useState(t("hermit.defaultAnswer"));
   const [isRunning, setIsRunning] = useState(false);
+  const [isCompiling, setIsCompiling] = useState(false);
+  const [compileError, setCompileError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!activeWorkspaceId) {
@@ -41,7 +58,7 @@ export function HermitPanel() {
     }
 
     setAnswer(t("hermit.defaultAnswer"));
-  }, [activeWorkspaceId, latestExchange, locale, t]);
+  }, [activeWorkspaceId, latestExchange, t]);
 
   const suggestedQuestion = useMemo(() => {
     if (!activeWorkspaceId) {
@@ -49,9 +66,48 @@ export function HermitPanel() {
     }
 
     return locale === "zh-CN"
-      ? "Alex 在这里应该先抽哪块能力？"
-      : "What capability should Alex extract first here?";
+      ? "把当前项目的下一步整理成可以执行的 prompt。"
+      : "Turn the next step for this project into an executable prompt.";
   }, [activeWorkspaceId, locale]);
+
+  async function compilePrompt(question: string) {
+    if (!activeWorkspaceId || !workspace) {
+      return;
+    }
+
+    setCompileError(null);
+    setIsCompiling(true);
+
+    try {
+      const result = await requestCompiledHermitPrompt({
+        locale,
+        mode: "project",
+        question,
+        projectTitle: project?.title,
+        workspaceName: workspace.name,
+        sniffSummary: workspace.sniff?.summary ?? "",
+        plannerSummary: workspace.planner?.suggestions[0],
+        entities: workspace.sniff?.entities ?? [],
+        risks: workspace.sniff?.risks ?? [],
+        suggestions: [
+          ...(workspace.sniff?.suggestions ?? []),
+          ...(workspace.planner?.suggestions ?? []),
+        ],
+      });
+
+      setCompiledPrompt(activeWorkspaceId, result);
+    } catch (error) {
+      setCompileError(
+        error instanceof Error
+          ? error.message
+          : locale === "zh-CN"
+            ? "编译失败"
+            : "Compile failed",
+      );
+    } finally {
+      setIsCompiling(false);
+    }
+  }
 
   async function askWorkspaceHermit(question: string) {
     if (!activeWorkspaceId) {
@@ -65,15 +121,13 @@ export function HermitPanel() {
       locale,
     );
 
-    const exchange = {
+    appendWorkspaceHermitExchange({
       id: `${activeWorkspaceId}-${Date.now()}`,
       workspaceId: activeWorkspaceId,
       question,
       answer: nextAnswer,
       createdAt: Date.now(),
-    } as const;
-
-    appendWorkspaceHermitExchange(exchange);
+    });
 
     startTransition(() => {
       setAnswer(nextAnswer);
@@ -83,7 +137,7 @@ export function HermitPanel() {
     setIsRunning(false);
   }
 
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  async function handleCompile(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     const question = workspaceHermitInput.trim() || suggestedQuestion;
@@ -92,51 +146,62 @@ export function HermitPanel() {
       return;
     }
 
+    await compilePrompt(question);
+  }
+
+  async function handleAsk() {
+    const question = workspaceHermitInput.trim() || suggestedQuestion;
+
+    if (!question) {
+      return;
+    }
+
+    await compilePrompt(question);
+
     await askWorkspaceHermit(question);
   }
 
   return (
     <PanelShell title={t("hermit.panelTitle")}>
-      {sniff ? (
-        <div style={{ display: "grid", gap: "14px", fontSize: "13px" }}>
-          <div>
-            <div className="chariot-microcopy">{t("hermit.context")}</div>
-            <div
-              style={{
-                marginTop: "6px",
-                color: "var(--text-muted)",
-                lineHeight: 1.5,
-              }}
-            >
-              {sniff.summary}
+      {workspace ? (
+        <div style={{ display: "grid", gap: "16px", fontSize: "13px" }}>
+          <div className="chariot-detail-header">
+            <div>
+              <div className="chariot-microcopy">
+                {locale === "zh-CN" ? "Prompt Compiler" : "Prompt Compiler"}
+              </div>
+              <div className="chariot-detail-title">
+                {locale === "zh-CN"
+                  ? "Hermit 提示词编译台"
+                  : "Hermit Prompt Compiler"}
+              </div>
+            </div>
+            <div className="chariot-status-row">
+              <span className="chariot-chip">{workspace.name}</span>
+              <span className="chariot-chip">
+                {locale === "zh-CN"
+                  ? `${workspace.sniff?.entities.length ?? 0} 个实体`
+                  : `${workspace.sniff?.entities.length ?? 0} entities`}
+              </span>
             </div>
           </div>
 
-          <div>
-            <div className="chariot-microcopy">{t("hermit.entities")}</div>
-            <div className="chariot-status-row" style={{ marginTop: "8px" }}>
-              {sniff.entities.slice(0, 4).map((entity) => (
-                <span key={entity} className="chariot-chip">
-                  {entity}
-                </span>
-              ))}
+          <div className="chariot-quiet-grid">
+            <div className="chariot-soft-block">
+              <div className="chariot-microcopy">{t("hermit.context")}</div>
+              <div className="chariot-soft-copy">
+                {workspace.sniff?.summary ?? t("hermit.select")}
+              </div>
+            </div>
+            <div className="chariot-soft-block">
+              <div className="chariot-microcopy">{t("hermit.risks")}</div>
+              <div className="chariot-soft-copy">
+                {workspace.sniff?.risks[0] ?? t("hermit.emptyRisk")}
+              </div>
             </div>
           </div>
 
-          <div>
-            <div className="chariot-microcopy">{t("hermit.risks")}</div>
-            <div
-              style={{
-                marginTop: "6px",
-                color: "var(--text-muted)",
-                lineHeight: 1.5,
-              }}
-            >
-              {sniff.risks[0] ?? t("hermit.emptyRisk")}
-            </div>
-          </div>
-
-          <form onSubmit={handleSubmit} style={{ display: "grid", gap: "8px" }}>
+          <form onSubmit={handleCompile} style={{ display: "grid", gap: "10px" }}>
             <label className="chariot-microcopy" htmlFor="workspace-hermit-input">
               {t("hermit.inputLabel")}
             </label>
@@ -145,28 +210,23 @@ export function HermitPanel() {
               value={workspaceHermitInput}
               onChange={(event) => setWorkspaceHermitInput(event.target.value)}
               placeholder={t("hermit.inputPlaceholder")}
-              rows={3}
-              style={{
-                width: "100%",
-                resize: "vertical",
-                padding: "12px 14px",
-                borderRadius: "14px",
-                border: "1px solid var(--border-strong)",
-                background: "rgba(255,255,255,0.05)",
-                color: "inherit",
-              }}
+              rows={4}
+              className="chariot-input"
             />
-            <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+            <div className="chariot-action-row">
+              <button type="submit" className="chariot-primary-button">
+                {isCompiling
+                  ? locale === "zh-CN"
+                    ? "编译中…"
+                    : "Compiling..."
+                  : locale === "zh-CN"
+                    ? "编译 Prompt"
+                    : "Compile Prompt"}
+              </button>
               <button
-                type="submit"
-                style={{
-                  padding: "10px 14px",
-                  borderRadius: "12px",
-                  border: "1px solid rgba(215,164,89,0.4)",
-                  background: "rgba(215,164,89,0.16)",
-                  color: "var(--accent-strong)",
-                  cursor: "pointer",
-                }}
+                type="button"
+                className="chariot-secondary-button"
+                onClick={() => void handleAsk()}
               >
                 {isRunning ? t("hermit.asking") : t("hermit.ask")}
               </button>
@@ -176,72 +236,54 @@ export function HermitPanel() {
             </div>
           </form>
 
-          <div>
+          {compileError ? (
+            <div className="chariot-error-copy">{compileError}</div>
+          ) : null}
+
+          {compiledPrompt ? (
+            <div className="chariot-quiet-grid">
+              <div className="chariot-soft-block">
+                <div className="chariot-microcopy">
+                  {locale === "zh-CN" ? "系统提示词" : "System Prompt"}
+                </div>
+                <pre className="chariot-preflight-copy">
+                  {compiledPrompt.systemPrompt}
+                </pre>
+              </div>
+              <div className="chariot-soft-block">
+                <div className="chariot-microcopy">
+                  {locale === "zh-CN" ? "用户提示词" : "User Prompt"}
+                </div>
+                <pre className="chariot-preflight-copy">
+                  {compiledPrompt.userPrompt}
+                </pre>
+              </div>
+            </div>
+          ) : null}
+
+          <div className="chariot-soft-block">
             <div className="chariot-microcopy">{t("hermit.output")}</div>
-            <div
-              style={{
-                marginTop: "6px",
-                padding: "12px",
-                borderRadius: "14px",
-                border: "1px solid var(--border-strong)",
-                background: "rgba(255,255,255,0.04)",
-                lineHeight: 1.5,
-                color: "var(--accent-strong)",
-                whiteSpace: "pre-wrap",
-              }}
-            >
+            <div className="chariot-soft-copy" style={{ color: "var(--accent-strong)" }}>
               {answer}
             </div>
           </div>
 
-          <div>
+          <div className="chariot-soft-block">
             <div className="chariot-microcopy">{t("hermit.history")}</div>
             {history.length > 0 ? (
-              <div style={{ display: "grid", gap: "8px", marginTop: "6px" }}>
+              <div style={{ display: "grid", gap: "10px", marginTop: "10px" }}>
                 {history
                   .slice()
                   .reverse()
                   .map((exchange) => (
-                    <div
-                      key={exchange.id}
-                      style={{
-                        padding: "10px 12px",
-                        borderRadius: "12px",
-                        border: "1px solid var(--border-strong)",
-                        background: "rgba(255,255,255,0.03)",
-                      }}
-                    >
-                      <div
-                        style={{
-                          color: "var(--text-strong)",
-                          fontWeight: 600,
-                          marginBottom: "6px",
-                        }}
-                      >
-                        {exchange.question}
-                      </div>
-                      <div
-                        style={{
-                          color: "var(--text-muted)",
-                          lineHeight: 1.5,
-                          whiteSpace: "pre-wrap",
-                        }}
-                      >
-                        {exchange.answer}
-                      </div>
+                    <div key={exchange.id} className="chariot-history-item">
+                      <div className="chariot-history-question">{exchange.question}</div>
+                      <div className="chariot-soft-copy">{exchange.answer}</div>
                     </div>
                   ))}
               </div>
             ) : (
-              <div
-                style={{
-                  marginTop: "6px",
-                  color: "var(--text-muted)",
-                  lineHeight: 1.5,
-                }}
-              >
-                {t("hermit.noHistory")}
-              </div>
+              <div className="chariot-soft-copy">{t("hermit.noHistory")}</div>
             )}
           </div>
         </div>

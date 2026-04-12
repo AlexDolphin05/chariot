@@ -8,6 +8,19 @@
 export type ChariotProjectStatus = "idle" | "active" | "blocked" | "done";
 export type ChariotWorkbenchModuleId = "hermit" | "planner" | "userkiller";
 export type ChariotLocale = "zh-CN" | "en";
+export type ChariotPlannerTaskKind =
+  | "task"
+  | "meeting"
+  | "automation"
+  | "review";
+export type ChariotPlannerTaskStatus = "planned" | "active" | "done";
+export type ChariotAutomationRunStatus = "draft" | "running" | "completed";
+export type ChariotAutomationArtifactType =
+  | "email"
+  | "document"
+  | "checklist"
+  | "table";
+export type HermitPromptCompileMode = "board" | "project";
 
 export type ChariotRelation = {
   from: string;
@@ -28,6 +41,67 @@ export type ChariotHermitExchange = {
   question: string;
   answer: string;
   createdAt: number;
+};
+
+export type ChariotPlannerTask = {
+  id: string;
+  workspaceId: string;
+  title: string;
+  kind: ChariotPlannerTaskKind;
+  status: ChariotPlannerTaskStatus;
+  startsAt: number;
+  endsAt: number;
+  lane: string;
+  notes?: string;
+};
+
+export type ChariotAutomationArtifact = {
+  id: string;
+  name: string;
+  type: ChariotAutomationArtifactType;
+  summary: string;
+  content: string;
+};
+
+export type ChariotAutomationRun = {
+  id: string;
+  workspaceId: string;
+  templateId: string;
+  templateName: string;
+  brief: string;
+  status: ChariotAutomationRunStatus;
+  createdAt: number;
+  artifacts: ChariotAutomationArtifact[];
+};
+
+export type HermitPromptSection = {
+  id: string;
+  label: string;
+  content: string;
+};
+
+export type HermitPromptCompileRequest = {
+  locale: ChariotLocale;
+  mode: HermitPromptCompileMode;
+  question: string;
+  projectTitle?: string;
+  workspaceName?: string;
+  sniffSummary: string;
+  plannerSummary?: string;
+  entities: string[];
+  risks: string[];
+  suggestions: string[];
+};
+
+export type HermitPromptCompileResult = {
+  title: string;
+  mode: HermitPromptCompileMode;
+  systemPrompt: string;
+  userPrompt: string;
+  compiledPrompt: string;
+  notes: string[];
+  sections: HermitPromptSection[];
+  updatedAt: number;
 };
 
 export type ChariotProjectCard = {

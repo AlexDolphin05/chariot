@@ -11,5 +11,10 @@ export {
   type ResumeAutomationResult,
   type UserkillerArtifactLoader,
 } from "./artifactLoader";
+export {
+  getAutomationTemplates,
+  runAutomationTemplate,
+  type UserkillerAutomationTemplate,
+} from "./automationRunner";
 export { getLegacyBridgeNotes } from "./legacyBridgeNotes";
 export { mockUserkillerBridge, mockUserkillerSession } from "./mockData";

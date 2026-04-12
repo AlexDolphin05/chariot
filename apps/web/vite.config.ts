@@ -5,6 +5,14 @@ import path from "path";
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  server: {
+    proxy: {
+      "/api": {
+        target: "http://localhost:4311",
+        changeOrigin: true,
+      },
+    },
+  },
   resolve: {
     alias: {
       "@chariot/types": path.resolve(__dirname, "../../packages/types/src"),

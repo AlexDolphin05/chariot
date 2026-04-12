@@ -8,6 +8,12 @@ export {
   detectProjectConflicts,
 } from "./conflictDetector";
 export {
+  buildLivePlanningSnapshot,
+  detectTaskConflicts,
+  sortPlannerTasks,
+  suggestPlannerActions,
+} from "./scheduler";
+export {
   mockGlobalPlannerSnapshot,
   mockProjectPlannerSnapshot,
 } from "./mockData";

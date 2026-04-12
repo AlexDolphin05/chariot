@@ -1,10 +1,13 @@
 import { create } from "zustand";
 import type {
+  ChariotAutomationRun,
   ChariotHermitExchange,
   ChariotLocale,
+  ChariotPlannerTask,
   ChariotProjectCard,
   ChariotWorkbenchModuleId,
   ChariotWorkspace,
+  HermitPromptCompileResult,
 } from "@chariot/types";
 
 export type KernelState = {
@@ -17,6 +20,9 @@ export type KernelState = {
   globalHermitInput: string;
   workspaceHermitInput: string;
   workspaceHermitHistory: Record<string, ChariotHermitExchange[]>;
+  plannerTasksByWorkspace: Record<string, ChariotPlannerTask[]>;
+  automationRunsByWorkspace: Record<string, ChariotAutomationRun[]>;
+  compiledPromptsByWorkspace: Record<string, HermitPromptCompileResult>;
 };
 
 export type KernelHydration = {
@@ -29,6 +35,9 @@ export type KernelHydration = {
   globalHermitInput?: string;
   workspaceHermitInput?: string;
   workspaceHermitHistory?: Record<string, ChariotHermitExchange[]>;
+  plannerTasksByWorkspace?: Record<string, ChariotPlannerTask[]>;
+  automationRunsByWorkspace?: Record<string, ChariotAutomationRun[]>;
+  compiledPromptsByWorkspace?: Record<string, HermitPromptCompileResult>;
 };
 
 export type KernelActions = {
@@ -42,6 +51,21 @@ export type KernelActions = {
   setGlobalHermitInput: (input: string) => void;
   setWorkspaceHermitInput: (input: string) => void;
   appendWorkspaceHermitExchange: (exchange: ChariotHermitExchange) => void;
+  setPlannerTasks: (
+    workspaceId: string,
+    tasks: ChariotPlannerTask[],
+  ) => void;
+  addPlannerTask: (task: ChariotPlannerTask) => void;
+  updatePlannerTaskStatus: (
+    workspaceId: string,
+    taskId: string,
+    status: ChariotPlannerTask["status"],
+  ) => void;
+  appendAutomationRun: (run: ChariotAutomationRun) => void;
+  setCompiledPrompt: (
+    workspaceId: string,
+    result: HermitPromptCompileResult,
+  ) => void;
   updateWorkspace: (
     workspaceId: string,
     updater: (workspace: ChariotWorkspace) => ChariotWorkspace,
@@ -58,6 +82,9 @@ export const useKernelStore = create<KernelState & KernelActions>((set) => ({
   globalHermitInput: "",
   workspaceHermitInput: "",
   workspaceHermitHistory: {},
+  plannerTasksByWorkspace: {},
+  automationRunsByWorkspace: {},
+  compiledPromptsByWorkspace: {},
 
   hydrate: ({
     locale = "zh-CN",
@@ -69,6 +96,9 @@ export const useKernelStore = create<KernelState & KernelActions>((set) => ({
     globalHermitInput = "",
     workspaceHermitInput = "",
     workspaceHermitHistory = {},
+    plannerTasksByWorkspace = {},
+    automationRunsByWorkspace = {},
+    compiledPromptsByWorkspace = {},
   }) =>
     set({
       locale,
@@ -80,6 +110,9 @@ export const useKernelStore = create<KernelState & KernelActions>((set) => ({
       globalHermitInput,
       workspaceHermitInput,
       workspaceHermitHistory,
+      plannerTasksByWorkspace,
+      automationRunsByWorkspace,
+      compiledPromptsByWorkspace,
     }),
 
   setLocale: (locale) => set({ locale }),
@@ -99,6 +132,52 @@ export const useKernelStore = create<KernelState & KernelActions>((set) => ({
           ...(state.workspaceHermitHistory[exchange.workspaceId] ?? []).slice(-5),
           exchange,
         ],
+      },
+    })),
+  setPlannerTasks: (workspaceId, tasks) =>
+    set((state) => ({
+      plannerTasksByWorkspace: {
+        ...state.plannerTasksByWorkspace,
+        [workspaceId]: tasks,
+      },
+    })),
+  addPlannerTask: (task) =>
+    set((state) => ({
+      plannerTasksByWorkspace: {
+        ...state.plannerTasksByWorkspace,
+        [task.workspaceId]: [
+          ...(state.plannerTasksByWorkspace[task.workspaceId] ?? []),
+          task,
+        ],
+      },
+    })),
+  updatePlannerTaskStatus: (workspaceId, taskId, status) =>
+    set((state) => ({
+      plannerTasksByWorkspace: {
+        ...state.plannerTasksByWorkspace,
+        [workspaceId]: (state.plannerTasksByWorkspace[workspaceId] ?? []).map(
+          (task) => (task.id === taskId ? { ...task, status } : task),
+        ),
+      },
+    })),
+  appendAutomationRun: (run) =>
+    set((state) => ({
+      automationRunsByWorkspace: {
+        ...state.automationRunsByWorkspace,
+        [run.workspaceId]: [
+          run,
+          ...(state.automationRunsByWorkspace[run.workspaceId] ?? []).slice(
+            0,
+            5,
+          ),
+        ],
+      },
+    })),
+  setCompiledPrompt: (workspaceId, result) =>
+    set((state) => ({
+      compiledPromptsByWorkspace: {
+        ...state.compiledPromptsByWorkspace,
+        [workspaceId]: result,
       },
     })),
   updateWorkspace: (workspaceId, updater) =>
