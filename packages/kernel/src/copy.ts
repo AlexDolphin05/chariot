@@ -89,7 +89,13 @@ type CopyKey =
   | "moduleHost.reload"
   | "moduleHost.loading"
   | "moduleHost.noArtifacts"
-  | "common.module";
+  | "common.module"
+  | "curtain.microcopy"
+  | "curtain.title"
+  | "curtain.subtitle"
+  | "curtain.enterHint"
+  | "workspace.back"
+  | "workspace.notFound";
 
 type CopyParams = Record<string, string | number>;
 
@@ -179,6 +185,12 @@ const copy: Record<ChariotLocale, Record<CopyKey, string>> = {
     "moduleHost.loading": "桥接中…",
     "moduleHost.noArtifacts": "当前没有可显示的桥接产物。",
     "common.module": "模块 {name}",
+    "curtain.microcopy": "Chariot / 幕布",
+    "curtain.title": "所有项目",
+    "curtain.subtitle": "点击任意便签进入项目恒星系。",
+    "curtain.enterHint": "点击进入",
+    "workspace.back": "← 返回幕布",
+    "workspace.notFound": "找不到该项目。",
   },
   en: {
     "shell.microcopy": "Chariot / Unified Shell",
@@ -265,6 +277,12 @@ const copy: Record<ChariotLocale, Record<CopyKey, string>> = {
     "moduleHost.loading": "Loading bridge...",
     "moduleHost.noArtifacts": "No bridge artifacts to show yet.",
     "common.module": "Module {name}",
+    "curtain.microcopy": "Chariot / Curtain",
+    "curtain.title": "All Projects",
+    "curtain.subtitle": "Tap any note to enter its star system.",
+    "curtain.enterHint": "Enter",
+    "workspace.back": "← Back to Board",
+    "workspace.notFound": "Project not found.",
   },
 };
 

@@ -1,6 +1,5 @@
 import { useChariotI18n } from "@chariot/kernel";
 import { detectGlobalConflicts } from "@chariot/module-planner";
-import { PanelShell } from "@chariot/ui";
 
 export function GlobalPlannerOverlay() {
   const { locale, t } = useChariotI18n();
@@ -10,8 +9,16 @@ export function GlobalPlannerOverlay() {
   ).size;
 
   return (
-    <PanelShell title={t("planner.overlayTitle")}>
-      <div style={{ display: "grid", gap: "10px", fontSize: "13px" }}>
+    <div className="chariot-planner-whisper">
+      <div className="chariot-microcopy">{t("planner.overlayTitle")}</div>
+      <div
+        style={{
+          display: "grid",
+          gap: "10px",
+          fontSize: "13px",
+          marginTop: "10px",
+        }}
+      >
         <div className="chariot-status-row">
           <span className="chariot-chip">
             {t("planner.conflicts", { count: snapshot.conflicts.length })}
@@ -27,6 +34,6 @@ export function GlobalPlannerOverlay() {
           {snapshot.suggestions[0]}
         </div>
       </div>
-    </PanelShell>
+    </div>
   );
 }
