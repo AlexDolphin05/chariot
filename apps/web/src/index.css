@@ -71,17 +71,17 @@ select {
 .chariot-constellation-layout {
   min-height: 0;
   display: grid;
-  grid-template-rows: minmax(620px, auto) minmax(0, 1fr);
-  gap: 16px;
+  grid-template-rows: minmax(520px, auto) minmax(0, 1fr);
+  gap: 14px;
 }
 
 .chariot-constellation-shell {
   min-height: 0;
   display: grid;
-  gap: 16px;
-  padding: 18px;
+  gap: 14px;
+  padding: 16px;
   border: 1px solid var(--border-strong);
-  border-radius: 28px;
+  border-radius: 20px;
   background:
     radial-gradient(circle at 18% 18%, rgba(215, 164, 89, 0.18), transparent 24%),
     radial-gradient(circle at 82% 26%, rgba(126, 194, 138, 0.12), transparent 22%),
@@ -100,7 +100,7 @@ select {
 
 .chariot-constellation-title {
   margin-top: 6px;
-  font-size: 28px;
+  font-size: 24px;
   font-weight: 700;
 }
 
@@ -113,8 +113,8 @@ select {
 
 .chariot-constellation-stage {
   position: relative;
-  min-height: 500px;
-  border-radius: 26px;
+  min-height: 410px;
+  border-radius: 18px;
   overflow: hidden;
   border: 1px solid var(--border-soft);
   background:
@@ -140,8 +140,8 @@ select {
   position: absolute;
   left: 50%;
   top: 50%;
-  width: 360px;
-  height: 360px;
+  width: 300px;
+  height: 300px;
   transform: translate(-50%, -50%);
   border-radius: 999px;
   background:
@@ -161,27 +161,27 @@ select {
 }
 
 .chariot-orbit-ring-one {
-  width: 320px;
-  height: 320px;
+  width: 260px;
+  height: 260px;
 }
 
 .chariot-orbit-ring-two {
-  width: 450px;
-  height: 450px;
+  width: 390px;
+  height: 390px;
 }
 
 .chariot-orbit-ring-three {
-  width: 600px;
-  height: 600px;
+  width: 520px;
+  height: 520px;
 }
 
 .chariot-core-star {
   position: absolute;
   left: 50%;
   top: 50%;
-  width: min(320px, calc(100% - 48px));
+  width: min(280px, calc(100% - 48px));
   transform: translate(-50%, -50%);
-  padding: 28px 26px;
+  padding: 24px 24px;
   border-radius: 999px;
   border: 1px solid rgba(240, 201, 141, 0.2);
   background:
@@ -210,7 +210,7 @@ select {
 
 .chariot-core-title {
   margin-top: 10px;
-  font-size: 34px;
+  font-size: 30px;
   font-weight: 700;
 }
 
@@ -220,11 +220,17 @@ select {
   line-height: 1.6;
 }
 
+.chariot-core-status {
+  margin-top: 14px;
+  color: var(--accent-strong);
+  font-size: 12px;
+}
+
 .chariot-orbit-node {
   position: absolute;
-  width: 196px;
-  padding: 15px;
-  border-radius: 22px;
+  width: 154px;
+  padding: 13px;
+  border-radius: 16px;
   border: 1px solid var(--border-strong);
   background: linear-gradient(180deg, rgba(25, 33, 31, 0.92) 0%, rgba(11, 16, 15, 0.96) 100%);
   color: inherit;
@@ -249,35 +255,27 @@ select {
 }
 
 .chariot-orbit-node[data-orbit="map"] {
-  left: 9%;
-  top: 16%;
+  left: 12%;
+  top: 18%;
 }
 
 .chariot-orbit-node[data-orbit="planner"] {
-  right: 9%;
+  right: 12%;
   top: 20%;
 }
 
 .chariot-orbit-node[data-orbit="userkiller"] {
-  left: 16%;
+  left: 18%;
   bottom: 14%;
 }
 
-.chariot-orbit-metric {
-  width: 42px;
-  height: 42px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 999px;
-  border: 1px solid rgba(240, 201, 141, 0.22);
-  background: rgba(240, 201, 141, 0.08);
+.chariot-orbit-signal {
   color: var(--accent-strong);
-  font-weight: 700;
+  font-size: 12px;
 }
 
 .chariot-orbit-title {
-  margin-top: 12px;
+  margin-top: 8px;
   font-size: 16px;
   font-weight: 700;
 }
@@ -738,13 +736,65 @@ select {
 .chariot-workspace-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: 12px;
   flex-wrap: wrap;
 }
 
 .chariot-workspace-main {
   min-height: 0;
+}
+
+.chariot-workspace-card-header {
+  border: 1px solid var(--border-strong);
+  border-radius: 18px;
+  background: linear-gradient(
+    180deg,
+    rgba(28, 39, 35, 0.94) 0%,
+    rgba(15, 21, 19, 0.96) 100%
+  );
+  padding: 14px 16px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.chariot-workspace-heading {
+  min-width: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.chariot-workspace-title {
+  margin-top: 6px;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.chariot-workspace-summary {
+  margin-top: 8px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  max-width: 720px;
+}
+
+.chariot-workspace-meta {
+  min-width: 180px;
+  display: grid;
+  justify-items: end;
+  gap: 8px;
+}
+
+.chariot-workspace-path {
+  max-width: 260px;
+  color: var(--text-soft);
+  font-size: 12px;
+  text-align: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .chariot-back-button {
@@ -787,26 +837,40 @@ select {
   }
 
   .chariot-constellation-stage {
-    min-height: 760px;
+    min-height: 620px;
   }
 
   .chariot-orbit-node[data-orbit="map"] {
-    left: 5%;
-    top: 8%;
+    left: 7%;
+    top: 9%;
   }
 
   .chariot-orbit-node[data-orbit="planner"] {
-    right: 5%;
-    top: 10%;
+    right: 7%;
+    top: 11%;
   }
 
   .chariot-orbit-node[data-orbit="userkiller"] {
-    left: 10%;
+    left: 12%;
     bottom: 8%;
   }
 
   .chariot-quiet-grid {
     grid-template-columns: 1fr;
+  }
+
+  .chariot-workspace-card-header,
+  .chariot-workspace-heading {
+    flex-direction: column;
+  }
+
+  .chariot-workspace-meta {
+    justify-items: start;
+  }
+
+  .chariot-workspace-path {
+    max-width: min(100%, 420px);
+    text-align: left;
   }
 }
 

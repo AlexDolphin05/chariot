@@ -4,7 +4,11 @@ import {
   useKernelStore,
 } from "@chariot/kernel";
 
-export function WorkspaceHeader() {
+type WorkspaceHeaderProps = {
+  onBackToCurtain?: () => void;
+};
+
+export function WorkspaceHeader({ onBackToCurtain }: WorkspaceHeaderProps) {
   const { locale, t } = useChariotI18n();
   const activeWorkspaceId = useKernelStore((state) => state.activeWorkspaceId);
   const activeProjectId = useKernelStore((state) => state.activeProjectId);
@@ -26,50 +30,38 @@ export function WorkspaceHeader() {
     typeof workspace?.metadata.role === "string" ? workspace.metadata.role : null;
 
   return (
-    <div
-      style={{
-        border: "1px solid var(--border-strong)",
-        borderRadius: "18px",
-        background:
-          "linear-gradient(180deg, rgba(28,39,35,0.94) 0%, rgba(15,21,19,0.96) 100%)",
-        padding: "16px 18px",
-        display: "flex",
-        alignItems: "flex-start",
-        justifyContent: "space-between",
-        gap: "16px",
-      }}
-    >
-      <div style={{ minWidth: 0 }}>
-        <div className="chariot-microcopy">{t("workbench.microcopy")}</div>
-        <div style={{ marginTop: "6px", fontSize: "28px", fontWeight: 700 }}>
-          {activeProject?.title ?? t("workbench.selectProject")}
-        </div>
-        <div
-          style={{
-            marginTop: "8px",
-            color: "var(--text-muted)",
-            lineHeight: 1.5,
-            maxWidth: "720px",
-          }}
-        >
-          {activeProject?.summary ?? t("workbench.description")}
+    <div className="chariot-workspace-card-header">
+      <div className="chariot-workspace-heading">
+        {onBackToCurtain ? (
+          <button
+            type="button"
+            className="chariot-back-button"
+            onClick={onBackToCurtain}
+          >
+            {t("workspace.back")}
+          </button>
+        ) : null}
+        <div style={{ minWidth: 0 }}>
+          <div className="chariot-microcopy">{t("workbench.microcopy")}</div>
+          <div className="chariot-workspace-title">
+            {activeProject?.title ?? t("workbench.selectProject")}
+          </div>
+          <div className="chariot-workspace-summary">
+            {activeProject?.summary ?? t("workbench.description")}
+          </div>
         </div>
       </div>
 
-      <div
-        style={{
-          minWidth: "220px",
-          display: "grid",
-          gap: "8px",
-        }}
-      >
+      <div className="chariot-workspace-meta">
         <span className="chariot-chip">
           {t("workbench.activeModule", {
             name: getModuleLabel(activeWorkbenchModule, locale),
           })}
         </span>
         {role ? <span className="chariot-chip">{role}</span> : null}
-        {sourcePath ? <span className="chariot-chip">{sourcePath}</span> : null}
+        {sourcePath ? (
+          <span className="chariot-workspace-path">{sourcePath}</span>
+        ) : null}
       </div>
     </div>
   );

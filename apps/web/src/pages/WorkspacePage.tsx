@@ -55,13 +55,6 @@ export function WorkspacePage() {
   return (
     <div className="chariot-workspace-shell">
       <header className="chariot-workspace-header">
-        <button
-          type="button"
-          className="chariot-back-button"
-          onClick={() => navigate("/")}
-        >
-          {t("workspace.back")}
-        </button>
         <div className="chariot-status-row">
           <button
             type="button"
@@ -91,7 +84,7 @@ export function WorkspacePage() {
       </header>
 
       <main className="chariot-workspace-main">
-        <WorkbenchPane />
+        <WorkbenchPane onBackToCurtain={() => navigate("/")} />
       </main>
     </div>
   );

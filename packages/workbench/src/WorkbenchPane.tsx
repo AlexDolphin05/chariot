@@ -10,7 +10,11 @@ import {
 } from "./WorkbenchConstellation";
 import { WorkspaceHeader } from "./WorkspaceHeader";
 
-export function WorkbenchPane() {
+type WorkbenchPaneProps = {
+  onBackToCurtain?: () => void;
+};
+
+export function WorkbenchPane({ onBackToCurtain }: WorkbenchPaneProps) {
   const activeWorkspaceId = useKernelStore((state) => state.activeWorkspaceId);
   const activeWorkbenchModule = useKernelStore(
     (state) => state.activeWorkbenchModule,
@@ -44,7 +48,15 @@ export function WorkbenchPane() {
   }
 
   const focusPanel =
-    activeOrbit === "planner" ? <PlannerPanel /> : activeOrbit === "userkiller" ? <ModuleHost /> : activeOrbit === "map" ? <ProjectMapPanel /> : <HermitPanel />;
+    activeOrbit === "planner" ? (
+      <PlannerPanel />
+    ) : activeOrbit === "userkiller" ? (
+      <ModuleHost />
+    ) : activeOrbit === "map" ? (
+      <ProjectMapPanel />
+    ) : (
+      <HermitPanel />
+    );
 
   return (
     <section
@@ -55,7 +67,7 @@ export function WorkbenchPane() {
         gap: "16px",
       }}
     >
-      <WorkspaceHeader />
+      <WorkspaceHeader onBackToCurtain={onBackToCurtain} />
       <div className="chariot-constellation-layout">
         <WorkbenchConstellation
           activeOrbit={activeOrbit}
