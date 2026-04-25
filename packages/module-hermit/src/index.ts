@@ -13,6 +13,8 @@ export {
 } from "./runner";
 export {
   buildCompiledHermitPrompt,
+  buildPolishedHermitPrompt,
   requestCompiledHermitPrompt,
+  requestPolishedHermitPrompt,
 } from "./compiler";
 export { mockBoardSniff, mockProjectSniff } from "./mockData";

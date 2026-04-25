@@ -1,6 +1,12 @@
 import { createServer } from "node:http";
-import { buildCompiledHermitPrompt } from "@chariot/module-hermit";
-import type { HermitPromptCompileRequest } from "@chariot/types";
+import {
+  buildCompiledHermitPrompt,
+  buildPolishedHermitPrompt,
+} from "@chariot/module-hermit";
+import type {
+  HermitPromptCompileRequest,
+  HermitPromptPolishRequest,
+} from "@chariot/types";
 
 const port = Number(process.env.CHARIOT_PROMPT_PORT ?? "4311");
 
@@ -52,6 +58,32 @@ const server = createServer((request, response) => {
             error instanceof Error
               ? error.message
               : "Unable to compile prompt",
+        });
+      }
+    });
+
+    return;
+  }
+
+  if (request.method === "POST" && request.url === "/api/prompt/polish") {
+    let body = "";
+
+    request.on("data", (chunk) => {
+      body += chunk;
+    });
+
+    request.on("end", () => {
+      try {
+        const payload = JSON.parse(body) as HermitPromptPolishRequest;
+        const result = buildPolishedHermitPrompt(payload);
+        sendJson(response, 200, result);
+      } catch (error) {
+        sendJson(response, 400, {
+          ok: false,
+          error:
+            error instanceof Error
+              ? error.message
+              : "Unable to polish prompt",
         });
       }
     });

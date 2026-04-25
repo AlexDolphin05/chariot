@@ -344,6 +344,33 @@ select {
   flex-wrap: wrap;
 }
 
+.chariot-mode-toggle {
+  display: inline-flex;
+  width: fit-content;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 999px;
+  border: 1px solid var(--border-strong);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.chariot-mode-button {
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.chariot-mode-button:hover,
+.chariot-mode-button.is-active {
+  border-color: rgba(240, 201, 141, 0.28);
+  background: rgba(215, 164, 89, 0.14);
+  color: var(--accent-strong);
+}
+
 .chariot-primary-button,
 .chariot-secondary-button {
   padding: 10px 14px;

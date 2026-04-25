@@ -1,11 +1,110 @@
 import type {
   HermitPromptCompileRequest,
   HermitPromptCompileResult,
+  HermitPromptPolishRequest,
+  HermitPromptPolishResult,
   HermitPromptSection,
 } from "@chariot/types";
 
 function joinList(items: string[]): string {
   return items.filter(Boolean).join(", ");
+}
+
+function normalizePrompt(text: string): string {
+  return text
+    .replace(/\r\n/g, "\n")
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .join("\n");
+}
+
+function localTranslate(text: string, targetLocale: "zh-CN" | "en"): string {
+  const dictionary =
+    targetLocale === "zh-CN"
+      ? [
+          ["next steps", "下一步"],
+          ["next step", "下一步"],
+          ["risks", "风险"],
+          ["risk", "风险"],
+          ["prompts", "提示词"],
+          ["prompt", "提示词"],
+          ["context", "上下文"],
+          ["goal", "目标"],
+          ["suggestion", "建议"],
+          ["suggestions", "建议"],
+          ["project", "项目"],
+          ["workspace", "工作区"],
+          ["planner", "排程器"],
+          ["schedule", "排程"],
+          ["automation", "自动化"],
+          ["compile", "编译"],
+          ["polish", "润色"],
+        ]
+      : [
+          ["润色成可执行提示词", "polish into an executable prompt"],
+          ["润色成可执行prompt", "polish into an executable prompt"],
+          ["请整理", "Please organize"],
+          ["上下文", "context"],
+          ["目标", "goal"],
+          ["风险", "risk"],
+          ["建议", "suggestions"],
+          ["项目", "project"],
+          ["工作区", "workspace"],
+          ["排程器", "planner"],
+          ["排程", "schedule"],
+          ["自动化", "automation"],
+          ["提示词", "prompt"],
+          ["编译", "compile"],
+          ["润色", "polish"],
+          ["下一步", "next step"],
+        ];
+
+  return dictionary.reduce(
+    (current, [from, to]) => current.replaceAll(from, to),
+    text,
+  );
+}
+
+function buildPromptBody(
+  request: HermitPromptPolishRequest,
+  outputLocale: "zh-CN" | "en",
+): string {
+  const normalized = normalizePrompt(request.sourceText);
+  const translatedSource = localTranslate(normalized, outputLocale);
+  const intent = request.intent?.trim()
+    ? localTranslate(request.intent.trim(), outputLocale)
+    : null;
+  const projectTitle = request.projectTitle
+    ? localTranslate(request.projectTitle, outputLocale)
+    : null;
+  const workspaceName = request.workspaceName
+    ? localTranslate(request.workspaceName, outputLocale)
+    : null;
+
+  if (outputLocale === "zh-CN") {
+    return [
+      intent ? `目标：${intent}` : null,
+      projectTitle ? `项目：${projectTitle}` : null,
+      workspaceName ? `工作区：${workspaceName}` : null,
+      "请基于以下内容给出清晰、可执行、边界明确的回答：",
+      translatedSource,
+      "输出要求：保留关键限制，先处理不确定性，再给出下一步。",
+    ]
+      .filter(Boolean)
+      .join("\n");
+  }
+
+  return [
+    intent ? `Goal: ${intent}` : null,
+    projectTitle ? `Project: ${projectTitle}` : null,
+    workspaceName ? `Workspace: ${workspaceName}` : null,
+    "Use the following context to produce a clear, actionable answer with explicit boundaries:",
+    translatedSource,
+    "Output requirements: preserve constraints, handle uncertainty first, then provide next steps.",
+  ]
+    .filter(Boolean)
+    .join("\n");
 }
 
 export function buildCompiledHermitPrompt(
@@ -127,4 +226,96 @@ export async function requestCompiledHermitPrompt(
   }
 
   return (await response.json()) as HermitPromptCompileResult;
+}
+
+export function buildPolishedHermitPrompt(
+  request: HermitPromptPolishRequest,
+): HermitPromptPolishResult {
+  const normalized = normalizePrompt(request.sourceText);
+  const polishedPrompt = buildPromptBody(request, request.locale);
+  const translatedPrompt =
+    request.mode === "translate"
+      ? buildPromptBody(request, request.targetLocale)
+      : polishedPrompt;
+  const targetLabel =
+    request.targetLocale === "zh-CN" ? "中文" : "English";
+
+  const sections: HermitPromptSection[] =
+    request.locale === "zh-CN"
+      ? [
+          {
+            id: "source",
+            label: "原始输入",
+            content: normalized,
+          },
+          {
+            id: "polished",
+            label: "润色后",
+            content: polishedPrompt,
+          },
+          {
+            id: "translated",
+            label: `目标语言：${targetLabel}`,
+            content: translatedPrompt,
+          },
+        ]
+      : [
+          {
+            id: "source",
+            label: "Source",
+            content: normalized,
+          },
+          {
+            id: "polished",
+            label: "Polished",
+            content: polishedPrompt,
+          },
+          {
+            id: "translated",
+            label: `Target: ${targetLabel}`,
+            content: translatedPrompt,
+          },
+        ];
+
+  return {
+    title:
+      request.locale === "zh-CN"
+        ? `${request.projectTitle ?? "Hermit"} Prompt 润色结果`
+        : `${request.projectTitle ?? "Hermit"} Prompt Polish`,
+    mode: request.mode,
+    targetLocale: request.targetLocale,
+    originalPrompt: normalized,
+    polishedPrompt,
+    translatedPrompt,
+    notes:
+      request.locale === "zh-CN"
+        ? [
+            "本地服务会先清理结构，再生成可直接交给模型的 prompt。",
+            "翻译模式会做轻量术语转换；正式模型接入后可以替换为更强翻译器。",
+          ]
+        : [
+            "The local service first normalizes structure, then returns a model-ready prompt.",
+            "Translate mode applies lightweight term mapping; a stronger translator can replace this later.",
+          ],
+    sections,
+    updatedAt: Date.now(),
+  };
+}
+
+export async function requestPolishedHermitPrompt(
+  request: HermitPromptPolishRequest,
+): Promise<HermitPromptPolishResult> {
+  const response = await fetch("/api/prompt/polish", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(request),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Prompt polish failed with status ${response.status}`);
+  }
+
+  return (await response.json()) as HermitPromptPolishResult;
 }

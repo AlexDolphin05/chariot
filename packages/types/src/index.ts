@@ -21,6 +21,7 @@ export type ChariotAutomationArtifactType =
   | "checklist"
   | "table";
 export type HermitPromptCompileMode = "board" | "project";
+export type HermitPromptPolishMode = "polish" | "translate";
 
 export type ChariotRelation = {
   from: string;
@@ -99,6 +100,28 @@ export type HermitPromptCompileResult = {
   systemPrompt: string;
   userPrompt: string;
   compiledPrompt: string;
+  notes: string[];
+  sections: HermitPromptSection[];
+  updatedAt: number;
+};
+
+export type HermitPromptPolishRequest = {
+  locale: ChariotLocale;
+  mode: HermitPromptPolishMode;
+  sourceText: string;
+  targetLocale: ChariotLocale;
+  projectTitle?: string;
+  workspaceName?: string;
+  intent?: string;
+};
+
+export type HermitPromptPolishResult = {
+  title: string;
+  mode: HermitPromptPolishMode;
+  targetLocale: ChariotLocale;
+  originalPrompt: string;
+  polishedPrompt: string;
+  translatedPrompt: string;
   notes: string[];
   sections: HermitPromptSection[];
   updatedAt: number;
