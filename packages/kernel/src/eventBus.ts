@@ -8,12 +8,18 @@ import type { ChariotEvent, ChariotEventType } from "@chariot/types";
 type EventOf<T extends ChariotEventType> = Extract<ChariotEvent, { type: T }>;
 type Handler<T extends ChariotEventType> = (event: EventOf<T>) => void;
 
-const handlers = new Map<ChariotEventType, Set<Handler<ChariotEventType>>>();
+/**
+ * 内部统一按宽类型存储；subscribe 的泛型签名保证了
+ * 只有匹配 type 的事件会派发给对应 handler，所以这里的收窄是安全的。
+ */
+type AnyHandler = (event: ChariotEvent) => void;
+
+const handlers = new Map<ChariotEventType, Set<AnyHandler>>();
 
 export const eventBus = {
   publish(event: ChariotEvent): void {
     handlers.get(event.type)?.forEach((handler) => {
-      handler(event as EventOf<ChariotEventType>);
+      handler(event);
     });
   },
 
@@ -26,9 +32,10 @@ export const eventBus = {
       handlers.set(type, new Set());
     }
     const set = handlers.get(type)!;
-    set.add(handler as Handler<ChariotEventType>);
+    const wrapped = handler as unknown as AnyHandler;
+    set.add(wrapped);
     return () => {
-      set.delete(handler as Handler<ChariotEventType>);
+      set.delete(wrapped);
     };
   },
 };

@@ -8,7 +8,6 @@ import type {
   ChariotWorkspace,
   ChariotWorkbenchModuleId,
   PlannerSnapshot,
-  SniffSnapshot,
 } from "@chariot/types";
 
 export type KernelState = {
