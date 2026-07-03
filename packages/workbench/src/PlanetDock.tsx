@@ -1,70 +1,37 @@
+/**
+ * PlanetDock — Workbench 模块切换坞（占位视觉）。
+ * 从 module registry 读取支持 workbench 的模块，点击切换 ModuleHost 内容。
+ */
+import type { ChariotWorkbenchModuleId } from "@chariot/types";
 import {
-  getModuleLabel,
-  getWorkbenchModules,
+  listWorkbenchModules,
   switchWorkbenchModule,
-  useChariotI18n,
   useKernelStore,
 } from "@chariot/kernel";
 
-const MODULE_ORDER = ["hermit", "planner", "userkiller"];
-
 export function PlanetDock() {
-  const { locale, t } = useChariotI18n();
-  const activeModule = useKernelStore((state) => state.activeWorkbenchModule);
-  const modules = getWorkbenchModules().sort(
-    (left, right) =>
-      MODULE_ORDER.indexOf(left.id) - MODULE_ORDER.indexOf(right.id),
-  );
+  const activeModule = useKernelStore((s) => s.activeWorkbenchModule);
+  const modules = listWorkbenchModules();
 
   return (
-    <div
-      style={{
-        display: "grid",
-        gap: "10px",
-        padding: "14px 16px",
-        borderRadius: "18px",
-        border: "1px solid var(--border-strong)",
-        background:
-          "linear-gradient(180deg, rgba(28,39,35,0.92) 0%, rgba(13,18,16,0.96) 100%)",
-      }}
-    >
-      <div className="chariot-microcopy">{t("planetDock.title")}</div>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
-        {modules.map((module) => {
-          const isActive = activeModule === module.id;
-
-          return (
-            <button
-              key={module.id}
-              type="button"
-              onClick={() =>
-                switchWorkbenchModule(
-                  module.id as "hermit" | "planner" | "userkiller",
-                )
-              }
-              style={{
-                padding: module.id === "hermit" ? "10px 18px" : "8px 14px",
-                borderRadius: "999px",
-                border: isActive
-                  ? "1px solid rgba(215,164,89,0.4)"
-                  : "1px solid var(--border-strong)",
-                background: isActive
-                  ? "rgba(215,164,89,0.16)"
-                  : "rgba(255,255,255,0.04)",
-                cursor: "pointer",
-                fontSize: module.id === "hermit" ? "14px" : "12px",
-                fontWeight: module.id === "hermit" ? 600 : 500,
-                color: "inherit",
-              }}
-            >
-              {getModuleLabel(
-                module.id as "hermit" | "planner" | "userkiller",
-                locale,
-              )}
-            </button>
-          );
-        })}
-      </div>
-    </div>
+    <nav className="flex flex-col items-center gap-2 border-l border-slate-200 bg-slate-50 px-2 py-4">
+      {modules.map((m) => (
+        <button
+          key={m.id}
+          type="button"
+          title={m.description}
+          onClick={() =>
+            switchWorkbenchModule(m.id as ChariotWorkbenchModuleId)
+          }
+          className={`flex h-12 w-12 flex-col items-center justify-center rounded-full border text-[10px] font-medium transition ${
+            activeModule === m.id
+              ? "border-amber-400 bg-amber-100 text-amber-800"
+              : "border-slate-200 bg-white text-slate-500 hover:border-slate-300"
+          }`}
+        >
+          {m.name}
+        </button>
+      ))}
+    </nav>
   );
 }

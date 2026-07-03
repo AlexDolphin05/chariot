@@ -1,47 +1,33 @@
+/**
+ * Snapshot Sync — 模块产出的快照写回 store 的唯一通道。
+ * module-hermit / module-planner 生成快照后调这里，不直接摸 store 内部结构。
+ */
 import type { PlannerSnapshot, SniffSnapshot } from "@chariot/types";
-import { publish } from "./eventBus";
-import { useKernelStore } from "./store";
+import { eventBus } from "./eventBus";
+import { getKernelState } from "./store";
 
-export function syncWorkspaceSniffSnapshot(
+export function syncWorkspaceSniff(
   workspaceId: string,
   snapshot: SniffSnapshot,
 ): void {
-  useKernelStore.getState().updateWorkspace(workspaceId, (workspace) => ({
-    ...workspace,
-    sniff: snapshot,
-  }));
+  getKernelState().patchWorkspace(workspaceId, { sniff: snapshot });
 }
 
-export function syncWorkspacePlannerSnapshot(
+export function syncWorkspacePlanner(
   workspaceId: string,
   snapshot: PlannerSnapshot,
 ): void {
-  useKernelStore.getState().updateWorkspace(workspaceId, (workspace) => ({
-    ...workspace,
-    planner: snapshot,
-  }));
-
-  publish({
+  getKernelState().patchWorkspace(workspaceId, { planner: snapshot });
+  eventBus.publish({
     type: "planner/conflicts.updated",
-    payload: {
-      workspaceId,
-      snapshot,
-    },
+    payload: { workspaceId, snapshot },
   });
 }
 
-export function syncWorkspaceSnapshots(
-  workspaceId: string,
-  snapshots: {
-    sniff?: SniffSnapshot;
-    planner?: PlannerSnapshot;
-  },
-): void {
-  if (snapshots.sniff) {
-    syncWorkspaceSniffSnapshot(workspaceId, snapshots.sniff);
-  }
-
-  if (snapshots.planner) {
-    syncWorkspacePlannerSnapshot(workspaceId, snapshots.planner);
-  }
+export function syncGlobalPlanner(snapshot: PlannerSnapshot): void {
+  getKernelState().setGlobalPlanner(snapshot);
+  eventBus.publish({
+    type: "planner/conflicts.updated",
+    payload: { workspaceId: null, snapshot },
+  });
 }

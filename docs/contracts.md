@@ -1,157 +1,41 @@
-# Chariot Contracts
+# Chariot Contracts（第一阶段重点）
 
-第一阶段最重要的工作不是做满功能，而是把共享 contract 做稳。
+所有 contract 定义在 `packages/types/src/index.ts`，是跨 package 通信的唯一语言。
 
-这些 contract 现在都定义在 `packages/types/src/index.ts`。
+## ChariotProjectCard
 
-## ProjectCard
+Board 上的项目卡。`boardPosition` 为 Tia 的画布预留；当前占位布局刻意不用它，避免提前锁死视觉假设。`moduleHints` 提示该项目倾向的模块（如 userkiller 项目提示 automation）。
 
-```ts
-type ChariotProjectCard = {
-  id: string
-  title: string
-  summary?: string
-  tags: string[]
-  status: "idle" | "active" | "blocked" | "done"
-  priority?: number
-  workspaceId: string
-  boardPosition: { x: number; y: number }
-  moduleHints?: string[]
-}
-```
+## ChariotWorkspace
 
-它是 Board 层最小稳定单元。
-
-当前用途：
-
-- 画布上的项目对象
-- active project 入口
-- workbench 绑定入口
-
-## Workspace
-
-```ts
-type ChariotWorkspace = {
-  id: string
-  projectId: string
-  name: string
-  metadata: Record<string, unknown>
-  sniff?: SniffSnapshot
-  planner?: PlannerSnapshot
-}
-```
-
-它是壳层里“项目上下文容器”的最小版本。
-
-当前用途：
-
-- 绑定项目与 snapshot
-- 记录源项目路径和角色
-- 供 workbench 渲染
+打开项目卡后进入的工作区。持有两个快照槽位（`sniff` / `planner`），由模块生成、经 `snapshotSync` 写入。`metadata` 存源项目路径、技术栈等松散信息，不过早 schema 化。
 
 ## SniffSnapshot
 
-```ts
-type SniffSnapshot = {
-  scope: "board" | "project"
-  summary: string
-  entities: string[]
-  relations: Array<{ from: string; to: string; type: string }>
-  risks: string[]
-  suggestions: string[]
-  updatedAt: number
-}
-```
-
-它是 Hermit 在 Chariot 里的最小通用输出。
-
-为什么先定义这个：
-
-- HERMIT 里的真实能力很多，但壳层只需要一个稳定结果形状
-- Board 和 Workbench 都能消费同一类结果
+Hermit 嗅探结果。`scope: "board" | "project"` 是双作用域设计的落点。字段（summary / entities / relations / risks / suggestions）对应 HERMIT `deepSniff.ts` 的 `EnhancedProjectProfile` 能力面，接真实实现时不需要改 contract。
 
 ## PlannerSnapshot
 
-```ts
-type PlannerSnapshot = {
-  scope: "global" | "project"
-  conflicts: Array<{
-    id: string
-    type: "time-overlap" | "dependency" | "resource" | "priority"
-    message: string
-    relatedProjectIds: string[]
-  }>
-  suggestions: string[]
-  updatedAt: number
-}
-```
+排程冲突快照。`scope: "global" | "project"`。冲突类型（time-overlap / dependency / resource / priority）与 emergency-planner 的 `plannerSnapshot.ts` **完全一致**（其代码中已有同名类型），未来可以直接对接。
 
-它是 Planner 在 Chariot 里的最小稳定输出。
+## ChariotModuleManifest
 
-为什么重要：
+模块自描述：`kind`（core / planner / automation / insight）+ `supports`（board / workbench）。PlanetDock 按 `supports` 过滤展示，未来第三方模块走同一注册入口。
 
-- 可以先接 mock conflict detection
-- 后续再把 emergency-planner 的真实语义接进来
-- Board 和 Workbench 都能共用
+## ChariotEvent
 
-## Module Manifest
+最小事件联合类型：
 
-```ts
-type ChariotModuleManifest = {
-  id: string
-  name: string
-  kind: "core" | "planner" | "automation" | "insight"
-  supports: Array<"board" | "workbench">
-  description?: string
-}
-```
-
-当前它用于：
-
-- module registry
-- `PlanetDock`
-- workbench module 识别
-
-## Scope Contracts
-
-```ts
-type BoardScope = {
-  kind: "board"
-  projectIds: string[]
-  workspaceIds: string[]
-  activeProjectId: string | null
-}
-
-type WorkspaceScope = {
-  kind: "project"
-  projectId: string
-  workspaceId: string
-}
-```
-
-这两个 scope contract 的意义是：
-
-- Hermit 不会被写死成“只接受当前项目”
-- Planner 也不会被写死成“只看单项目”
-
-## Event Contract
-
-当前最小事件联合类型包括：
-
-- `board/project.open`
-- `board/hermit.ask`
-- `workspace/active.changed`
-- `workbench/module.switch`
-- `planner/conflicts.updated`
-
-这些事件够支撑第一阶段的壳层联通。
+| 事件 | 发布者 | 订阅者（当前） |
+|---|---|---|
+| `board/project.open` | kernel runtime | bootstrap（触发快照生成） |
+| `board/hermit.ask` | GlobalHermitBar | （预留给日志/历史记录） |
+| `workspace/active.changed` | kernel runtime | （预留给 Tia 的画布高亮） |
+| `workbench/module.switch` | kernel runtime | （预留） |
+| `planner/conflicts.updated` | snapshotSync | （预留给全局提醒） |
 
 ## 为什么这些 contract 是第一阶段重点
 
-如果没有这些 contract，后面会马上出现三个问题：
-
-- HERMIT、planner、userkiller 的输出形状对不齐
-- Board 和 Workbench 会各自长出不同的数据假设
-- 迁移会退化成“把旧页面硬塞进新容器”
-
-所以当前策略是先把 contract 做小、做清楚、做稳定，再接真实能力。
+1. **它们是三个系统的最大公约数**：项目、工作区、认知快照、排程快照，每个源系统都能映射进来。
+2. **它们隔离了协作边界**：Alex 改内核/模块、Tia 改画布，只要 contract 不变就互不阻塞。
+3. **它们让 mock → 真实的替换是局部的**：真实能力接入只替换 builder/adapter 实现，UI 和 store 不动。

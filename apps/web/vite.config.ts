@@ -1,28 +1,10 @@
-import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
-import path from "path";
+import { defineConfig } from "vite";
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
-    proxy: {
-      "/api": {
-        target: "http://localhost:4311",
-        changeOrigin: true,
-      },
-    },
-  },
-  resolve: {
-    alias: {
-      "@chariot/types": path.resolve(__dirname, "../../packages/types/src"),
-      "@chariot/kernel": path.resolve(__dirname, "../../packages/kernel/src"),
-      "@chariot/ui": path.resolve(__dirname, "../../packages/ui/src"),
-      "@chariot/board": path.resolve(__dirname, "../../packages/board/src"),
-      "@chariot/workbench": path.resolve(__dirname, "../../packages/workbench/src"),
-      "@chariot/module-hermit": path.resolve(__dirname, "../../packages/module-hermit/src"),
-      "@chariot/module-planner": path.resolve(__dirname, "../../packages/module-planner/src"),
-      "@chariot/module-userkiller": path.resolve(__dirname, "../../packages/module-userkiller/src"),
-    },
+    port: 5173,
   },
 });

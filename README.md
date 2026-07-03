@@ -1,111 +1,75 @@
 # Chariot
 
-Chariot 是一个统一前端壳项目，用来把桌面上的 `HERMIT`、`emergency-planner`、`userkiller` 三个系统接到同一个工作空间里。
+Chariot 是一个统一前端壳项目，用来整合桌面上的三个已有系统：
 
-第一阶段目标不是把三个项目整页搬进来，而是先把共享模型、内核、模块契约和可运行壳层搭稳：
-
-- `HERMIT` 提供系统认知层能力
-- `emergency-planner` 提供约束与排程层能力
-- `userkiller` 提供自动化会话与产物层能力
-
-当前实现只覆盖 Alex 负责的开荒准备，不做 Tia 负责的完整 Board 视觉系统、post-it 动画或完整业务迁移。
+- **HERMIT** → 系统认知层（嗅探、上下文构建、项目解释）
+- **emergency-planner** → 系统约束/排程层（时间窗口、冲突检测、排程）
+- **userkiller** → 系统自动化层（workflow session、执行状态、artifact）
 
 ## 为什么存在
 
-三个源项目都已经有自己的页面、状态模型和交互假设，但 Chariot 需要的是一个统一壳，而不是三个应用的拼接页。
+三个系统各自有完整的页面和状态模型，直接拼页面只会得到一个缝合怪。Chariot 的做法是：**不复用页面，复用能力**——先统一数据模型（contract），再把各系统的能力以模块形式接进统一壳。
 
-第一阶段优先统一这些 contract：
+Chariot 有两个空间：
 
-- `ChariotProjectCard`
-- `ChariotWorkspace`
-- `SniffSnapshot`
-- `PlannerSnapshot`
-- `ChariotModuleManifest`
-- `ChariotEvent`
+1. **外层 Board / Canvas**：项目卡、全局 Hermit 输入框、全局排程冲突提示。完整画布视觉由 Tia 负责，当前只有占位布局。
+2. **内层 Workbench / Workspace**：打开某个项目后的工作区，包含 Workspace Hermit、Project Planner、Project Map、Userkiller 入口。由 Alex 负责。
 
-在这个基础上，Board 可以做全局嗅探和冲突提示，Workbench 可以做项目级工作流与模块入口。
+## 当前阶段（Stage 1）
 
-## 当前阶段做了什么
+只完成 Alex 这边的开荒准备：统一骨架 + contract + module interface + mock runtime。
 
-- 建好 `pnpm workspace` monorepo
-- 建好 `apps/web` 主壳
-- 建好共享类型、kernel、事件总线、module registry、workspace runtime
-- 建好 `board` / `workbench` 骨架
-- 建好 `module-hermit` / `module-planner` / `module-userkiller` 占位模块
-- 写入项目分析、架构、契约、下一步文档
-- 接通 mock 项目卡切换 active workspace 的最小闭环
+- ✅ pnpm monorepo，全 TypeScript
+- ✅ 共享类型（`@chariot/types`）
+- ✅ 内核（store / event bus / module registry / workspace runtime）
+- ✅ Board / Workbench 占位骨架
+- ✅ Hermit / Planner / Userkiller 三个模块的壳与 mock
+- ❌ 不做：Tia 的 Board 视觉系统、post-it 动画、业务功能迁移、userkiller Python 核心重写、后端服务
 
 ## 目录结构
 
 ```text
 chariot/
 ├── apps/
-│   └── web/                    # Vite + React 主应用壳
+│   └── web/                  # Vite + React 主壳（唯一的 app，无后端）
 ├── packages/
-│   ├── types/                  # 共享 contract
-│   ├── kernel/                 # store, event bus, module registry, runtime
-│   ├── ui/                     # panel shell, map node, tokens, placeholders
-│   ├── board/                  # BoardPane, BoardProjectCard, GlobalHermitBar
-│   ├── workbench/              # WorkbenchPane, ProjectMapPanel, PlanetDock
-│   ├── module-hermit/          # board/project context builder 与 runner 占位
-│   ├── module-planner/         # global/project snapshot 与冲突占位
-│   └── module-userkiller/      # session/artifact adapter contract 占位
-├── docs/
-│   ├── architecture.md
-│   ├── contracts.md
-│   ├── next-steps-alex.md
-│   └── project-analysis.md
-├── package.json
-├── pnpm-workspace.yaml
-└── tsconfig.base.json
+│   ├── types/                # 共享 contract（所有 package 的类型来源）
+│   ├── kernel/               # store、event bus、module registry、runtime、snapshot sync
+│   ├── ui/                   # PanelShell、Placeholder、语义 tokens
+│   ├── board/                # BoardPane、BoardProjectCard、GlobalHermitBar、GlobalPlannerOverlay
+│   ├── workbench/            # WorkbenchPane、各模块面板、PlanetDock、ModuleHost
+│   ├── module-hermit/        # Hermit 双作用域 context builder + mock runner
+│   ├── module-planner/       # Planner 双作用域 snapshot builder + mock 冲突检测
+│   └── module-userkiller/    # session/artifact adapter contract + legacy bridge notes
+└── docs/                     # 架构、契约、项目分析、下一步
 ```
 
 ## 如何启动
 
 ```bash
 pnpm install
-pnpm dev
+pnpm dev        # http://localhost:5173
+pnpm typecheck  # 类型检查
+pnpm build      # 生产构建
 ```
 
-默认访问地址是 [http://localhost:5173](http://localhost:5173)。
+### 最小可运行行为
 
-### 当前最小可运行行为
-
-- 页面是固定左右布局：左侧 `BoardPane`，右侧 `WorkbenchPane`
-- 底部常驻 `Global Hermit` 输入条
-- 预置三张 mock 项目卡：`HERMIT`、`Emergency Planner`、`Userkiller`
-- 点击任意项目卡会更新 `activeProjectId` / `activeWorkspaceId`
-- 右侧会同步显示该项目的标题、Hermit mock 信息、Planner mock 信息、Project Map 占位
-- `PlanetDock` 提供 `Hermit` / `Planner` / `Userkiller` 模块入口
+- 左侧 Board 区：三张 mock 项目卡（HERMIT / Emergency Planner / Userkiller）+ 全局冲突提示条
+- 右侧 Workbench 区：点击项目卡后显示该项目的 Hermit / Planner / Project Map 面板
+- 右侧 PlanetDock：在 Hermit / Planner / Userkiller 模块间切换
+- 底部常驻 Global Hermit 输入框：board scope 的 mock 问答
 
 ## 与三个源项目的关系
 
-### HERMIT
-
-Chariot 会优先复用它的上下文构建、嗅探、项目解释、检索和图结构能力，不直接复用 workflow 页面。
-
-### emergency-planner
-
-Chariot 会优先复用它的 planning window、conflict detection、scheduler、task semantics，不直接复用日历和 onboarding 页面。
-
-### userkiller
-
-Chariot 当前只保留 session / artifact / workflow bridge contract，不重写 Python 核心执行链。
+| 源项目 | Chariot 中的角色 | 复用策略 |
+|---|---|---|
+| HERMIT | `module-hermit` | 提炼 deepSniff / contextPipeline / projectIntelligence 能力，页面不搬 |
+| emergency-planner | `module-planner` | 类型已与其 plannerSnapshot.ts 对齐；scheduler / autoBlocks / planningWindow 是首批要抽的能力 |
+| userkiller | `module-userkiller` | 只做 HTTP 桥接 contract，Python 核心不迁移 |
 
 详见 [docs/project-analysis.md](docs/project-analysis.md)。
 
 ## 当前边界
 
-当前仓库只完成 Alex 这边的开荒准备：
-
-- 做统一骨架
-- 做 contract
-- 做 module interface
-- 做 mock runtime
-
-当前不做：
-
-- Tia 负责的完整 Board 美术和交互系统
-- post-it 复杂动画
-- userkiller Python 核心迁移
-- 后端服务整合
+本仓库当前只覆盖 Alex 的开荒部分。Tia 的 Board 视觉系统将在 `packages/board` 内展开，数据与事件 contract 已就位（`ChariotProjectCard.boardPosition`、`board/*` 事件）。

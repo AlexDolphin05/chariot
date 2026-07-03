@@ -1,41 +1,24 @@
 import type { ReactNode } from "react";
-import { tokens } from "./tokens";
 
-type PanelShellProps = {
-  title?: string;
+/** 通用面板外壳：标题 + 可选角标 + 内容。Workbench 各面板统一用它。 */
+export function PanelShell(props: {
+  title: string;
+  badge?: string;
   children: ReactNode;
-  className?: string;
-};
-
-export function PanelShell({ title, children, className = "" }: PanelShellProps) {
+}) {
   return (
-    <div
-      className={className}
-      style={{
-        border: tokens.panelBorder,
-        borderRadius: tokens.panelRadius,
-        background: tokens.panelBg,
-        overflow: "hidden",
-        boxShadow: "0 18px 40px rgba(0, 0, 0, 0.22)",
-        backdropFilter: "blur(16px)",
-      }}
-    >
-      {title && (
-        <div
-          style={{
-            padding: "12px 16px",
-            borderBottom: tokens.panelMutedBorder,
-            fontSize: "12px",
-            letterSpacing: "0.08em",
-            textTransform: "uppercase",
-            fontWeight: 600,
-            color: "var(--text-muted)",
-          }}
-        >
-          {title}
-        </div>
-      )}
-      <div style={{ padding: "16px" }}>{children}</div>
-    </div>
+    <section className="flex min-h-0 flex-col rounded-lg border border-slate-200 bg-white shadow-sm">
+      <header className="flex items-center justify-between border-b border-slate-100 px-3 py-2">
+        <h3 className="text-sm font-semibold text-slate-700">{props.title}</h3>
+        {props.badge ? (
+          <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500">
+            {props.badge}
+          </span>
+        ) : null}
+      </header>
+      <div className="min-h-0 flex-1 overflow-auto p-3 text-sm text-slate-600">
+        {props.children}
+      </div>
+    </section>
   );
 }

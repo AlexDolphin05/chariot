@@ -5,6 +5,5 @@ export const userkillerManifest: ChariotModuleManifest = {
   name: "Userkiller",
   kind: "automation",
   supports: ["workbench"],
-  description:
-    "Workflow/session/artifact adapter layer for the legacy Python automation stack.",
+  description: "自动化层：workflow session、执行状态、artifact 与模板",
 };

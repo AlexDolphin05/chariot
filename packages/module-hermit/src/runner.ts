@@ -1,52 +1,31 @@
-import type { ChariotLocale } from "@chariot/types";
-import {
-  buildBoardHermitContext,
-  buildWorkspaceHermitContext,
-} from "./contextBuilder";
+/**
+ * Hermit runner — MOCK 实现。
+ * 未来接入点：真实模型调用（HERMIT 的 hermit.ts / modelRouter），
+ * 这里先返回解释性文本，保证壳层交互闭环。
+ */
+import { buildBoardHermitContext, buildWorkspaceHermitContext } from "./contextBuilder";
 
-export async function runHermitInBoardScope(
-  question: string,
-  locale: ChariotLocale = "en",
-): Promise<string> {
-  const ctx = buildBoardHermitContext(locale);
-
-  if (locale === "zh-CN") {
-    return [
-      `[MOCK][全局 Hermit] ${question}`,
-      `作用域总结：${ctx.summary}`,
-      `建议动作：${ctx.suggestions[0]}`,
-      `当前跨项目风险：${ctx.risks[0]}`,
-    ].join("\n");
-  }
-
+export async function runHermitInBoardScope(question: string): Promise<string> {
+  const context = buildBoardHermitContext();
   return [
-    `[MOCK][Board Hermit] ${question}`,
-    `Scope summary: ${ctx.summary}`,
-    `Suggested next move: ${ctx.suggestions[0]}`,
-    `Current cross-project risk: ${ctx.risks[0]}`,
+    `（mock·board scope）你问：「${question}」`,
+    context.sniff.summary,
+    context.sniff.risks.length > 0
+      ? `风险：${context.sniff.risks.join("；")}`
+      : "当前没有全局风险。",
+    "→ 真实实现将基于全部项目的嗅探结果做全局回答。",
   ].join("\n");
 }
 
 export async function runHermitInProjectScope(
   workspaceId: string,
   question: string,
-  locale: ChariotLocale = "en",
 ): Promise<string> {
-  const ctx = buildWorkspaceHermitContext(workspaceId, locale);
-
-  if (locale === "zh-CN") {
-    return [
-      `[MOCK][项目 Hermit] ${question}`,
-      `工作区：${workspaceId}`,
-      `上下文总结：${ctx.summary}`,
-      `当前最有用的建议：${ctx.suggestions[0]}`,
-    ].join("\n");
-  }
-
+  const context = buildWorkspaceHermitContext(workspaceId);
   return [
-    `[MOCK][Project Hermit] ${question}`,
-    `Workspace: ${workspaceId}`,
-    `Context summary: ${ctx.summary}`,
-    `Most useful suggestion: ${ctx.suggestions[0]}`,
+    `（mock·project scope）你问：「${question}」`,
+    context.sniff.summary,
+    `涉及实体：${context.sniff.entities.join("、") || "（无）"}`,
+    "→ 真实实现将基于当前 workspace 的上下文管线（retrieve → evidence → answer）。",
   ].join("\n");
 }

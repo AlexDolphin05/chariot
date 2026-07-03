@@ -1,28 +1,28 @@
-export { useKernelStore } from "./store";
-export type { KernelActions, KernelHydration, KernelState } from "./store";
 export {
-  getModuleLabel,
-  getStatusLabel,
-  translate,
-  useChariotI18n,
-} from "./copy";
-export { publish, subscribe, subscribeTo } from "./eventBus";
+  useKernelStore,
+  getKernelState,
+  findWorkspace,
+  findProject,
+  findProjectByWorkspace,
+  useActiveWorkspace,
+  useActiveProject,
+} from "./store";
+export type { KernelState } from "./store";
+export { eventBus } from "./eventBus";
 export {
-  getAllModules,
-  getModule,
-  getWorkbenchModules,
   registerModule,
-  registerModules,
+  getModule,
+  listModules,
+  listWorkbenchModules,
 } from "./moduleRegistry";
 export {
-  getBoardScope,
-  getWorkspaceScope,
   openProject,
   setActiveWorkspace,
   switchWorkbenchModule,
 } from "./workspaceRuntime";
 export {
-  syncWorkspacePlannerSnapshot,
-  syncWorkspaceSniffSnapshot,
-  syncWorkspaceSnapshots,
+  syncWorkspaceSniff,
+  syncWorkspacePlanner,
+  syncGlobalPlanner,
 } from "./snapshotSync";
+export { seedKernel, seedProjects, seedWorkspaces } from "./seed";

@@ -5,6 +5,5 @@ export const plannerManifest: ChariotModuleManifest = {
   name: "Planner",
   kind: "planner",
   supports: ["board", "workbench"],
-  description:
-    "Planning windows, conflict snapshots, and schedule-semantics placeholders.",
+  description: "约束与排程层：冲突检测、时间窗口、排程建议",
 };

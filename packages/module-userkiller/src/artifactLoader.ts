@@ -1,70 +1,28 @@
-import type { ChariotLocale } from "@chariot/types";
+/**
+ * Artifact Loader — MOCK。
+ * 真实实现对应 userkiller 后端 GET /api/sessions/<id>/files。
+ */
+import type { UserkillerArtifact } from "./sessionAdapter";
 
-export type AutomationArtifact = {
-  id: string;
-  name: string;
-  type: "template" | "output" | "code";
-  path: string;
-  summary: string;
-};
-
-export type ResumeAutomationResult = {
-  status: string;
-  artifacts: AutomationArtifact[];
-};
-
-export interface UserkillerArtifactLoader {
-  loadAutomationArtifacts(sessionId: string): Promise<AutomationArtifact[]>;
-}
-
-export async function resumeAutomationSession(
-  sessionId: string,
-  locale: ChariotLocale = "en",
-): Promise<ResumeAutomationResult> {
-  return {
-    status:
-      locale === "zh-CN"
-        ? "Mock 会话已恢复。当前只是桥接执行状态，不做迁移。"
-        : "Mock session resumed. Execution state is bridged, not migrated.",
-    artifacts: [
-      {
-        id: `${sessionId}-template`,
-        name: "planner-template.py",
-        type: "template",
-        path: `/mock/sessions/${sessionId}/template-1.py`,
-        summary:
-          locale === "zh-CN"
-            ? "在 Python 桥接可调用前，模板语义应继续保持外部化。"
-            : "Template semantics should stay external until the Python bridge is callable.",
-      },
-    ],
-  };
-}
+const mockArtifacts: UserkillerArtifact[] = [
+  {
+    id: "uk-artifact-1",
+    sessionId: "uk-session-1",
+    name: "renamed_files_report.md",
+    kind: "report",
+    summary: "重命名结果报告：42 个文件，0 个失败",
+  },
+  {
+    id: "uk-artifact-2",
+    sessionId: "uk-session-2",
+    name: "weekly_pipeline.py",
+    kind: "code",
+    summary: "周报数据整理脚本（等待用户确认输入源）",
+  },
+];
 
 export async function loadAutomationArtifacts(
   sessionId: string,
-  locale: ChariotLocale = "en",
-): Promise<AutomationArtifact[]> {
-  return [
-    {
-      id: `${sessionId}-output`,
-      name: "output.xlsx",
-      type: "output",
-      path: `/mock/sessions/${sessionId}/output/output.xlsx`,
-      summary:
-        locale === "zh-CN"
-          ? "来自遗留自动化会话的代表性输出产物。"
-          : "Representative output artifact from a legacy automation session.",
-    },
-    {
-      id: `${sessionId}-code`,
-      name: "workflow_patch.py",
-      type: "code",
-      path: `/mock/sessions/${sessionId}/output/workflow_patch.py`,
-      summary:
-        locale === "zh-CN"
-          ? "Chariot 会引用而不会重写的生成代码产物。"
-          : "Generated code artifact that Chariot will reference, not rewrite.",
-    },
-  ];
+): Promise<UserkillerArtifact[]> {
+  return mockArtifacts.filter((a) => a.sessionId === sessionId);
 }

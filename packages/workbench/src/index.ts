@@ -1,13 +1,8 @@
 export { WorkbenchPane } from "./WorkbenchPane";
-export { WorkspaceView } from "./WorkspaceView";
 export { WorkspaceHeader } from "./WorkspaceHeader";
 export { HermitPanel } from "./HermitPanel";
 export { PlannerPanel } from "./PlannerPanel";
 export { ProjectMapPanel } from "./ProjectMapPanel";
-export { ProjectMapView } from "./ProjectMapView";
+export { UserkillerPanel } from "./UserkillerPanel";
 export { PlanetDock } from "./PlanetDock";
 export { ModuleHost } from "./ModuleHost";
-export {
-  WorkbenchConstellation,
-  type WorkbenchOrbitView,
-} from "./WorkbenchConstellation";

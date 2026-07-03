@@ -1,153 +1,59 @@
-# Project Analysis
+# 源项目开荒级分析
 
-这是一份开荒级分析，只服务于 Chariot 第一阶段，不做无止尽代码阅读。
+> 基于 2026-07-03 对 `~/Desktop/HERMIT`、`~/Desktop/emergency-planner`、`~/Desktop/userkiller` 的实际代码阅读。
+> 目标是支撑 Chariot 骨架决策，不是完整代码审计。
 
-已确认桌面上存在这三个源项目：
+## HERMIT（系统认知层）
 
-- `/Users/alexdolphin/Desktop/HERMIT`
-- `/Users/alexdolphin/Desktop/emergency-planner`
-- `/Users/alexdolphin/Desktop/userkiller`
+**技术栈**：TypeScript 全栈（React client + Express server + Drizzle），带大量测试。
 
-## 1. HERMIT
+**值得复用的能力**（都在 `server/` 下）：
 
-### 已确认的关键入口
+- `deepSniff.ts`（698 行）：项目深度嗅探/ingest。有 `DeepSniffDepth`（lean/standard/deep）、`RiskArea`、`HealthScore`、`EnhancedProjectProfile` 等成熟抽象，`deepIngestProject()` 是核心入口。→ 对应 Chariot 的 `SniffSnapshot`。
+- `contextPipeline.ts`：统一上下文管线（retrieval → code-tracing expansion → evidence formatting），`retrieveWithExpansion()` 是单一入口，已经过一轮去重重构。→ 对应 `module-hermit` 的 project scope runner。
+- `projectIntelligence/`：`dependencyGraph.ts`、`symbolExtractor.ts`、`routeExtractor.ts`、`schemaExtractor.ts`、`semanticChunker.ts` 等，图结构能力齐全。→ 对应 Workbench 的 Project Map。
+- `agenticIngest.ts`、`search/`（FTS5 + rerank）：检索与记忆相关抽象。
 
-- `server/contextAssembler.ts`
-- `server/deepSniff.ts`
-- `server/profileBuilder.ts`
-- `server/contextPipeline.ts`
-- `server/docparse.ts`
-- `server/search/retrieve.ts`
+**不适合直接复用**：client 页面（与其账号体系/onboarding 深度耦合）、auth 相关（supabaseJwt / googleAuth / betaInvite）、entitlements 商业化逻辑。
 
-### 适合复用的能力
+**在 Chariot 中的角色**：`module-hermit` 的真实实现来源。双作用域中 project scope 直接对应 contextPipeline；board scope 需要新写一层跨项目聚合（HERMIT 目前是单项目视角，这是唯一需要新设计的部分）。
 
-- layered context building
-- deep sniff / ingest / parsing
-- project interpretation
-- retrieval pipeline
-- graph / relation structures
-- workspace-oriented assistant orchestration
+## emergency-planner（系统约束/排程层）
 
-### 不适合直接复用的部分
+**技术栈**：TypeScript 全栈（与 HERMIT 同构：Express + Drizzle + React），测试覆盖好。
 
-- workflow 页面
-- HERMIT 自己的布局模式
-- 强耦合的 Brain 结果卡片
-- 依赖现有项目模型的 detail 页面
+**值得复用的能力**（都在 `server/services/` 下）：
 
-### 在 Chariot 中的角色
+- `scheduler.ts`：硬约束排程引擎（"AI proposes, script enforces"），有 `Task` / `ScheduledTask` / `UnscheduledReason`（带结构化 reason code）等干净的类型，v0.4 已修过时区/负载均衡问题。
+- `planningWindow.ts`：时间窗口抽象（`createPlanningWindow` / `isTaskWithinWindow` / `clampDeadlineToWindow`）。
+- `autoBlocks.ts`：约束块生成 + `checkTimeConflicts()` + `getAvailableSlots()` —— 冲突检测语义的核心。
+- `plannerSnapshot.ts`：**已经定义了与 Chariot 规范完全一致的 `PlannerSnapshot` / `PlannerConflict` 类型**（scope: global/project、四种冲突类型）。这不是巧合——它就是 Chariot planner contract 的原型，对接成本最低。
 
-HERMIT 是系统认知层。
+**不适合直接复用**：日历页面、登录/设置页、officeAssistant 对接。
 
-当前在 Chariot 中应先表现为：
+**在 Chariot 中的角色**：`module-planner` 的真实实现来源。global scope 冲突检测已有 `plannerSnapshot.ts` 可以近乎直接搬；project scope 排程走 scheduler.ts。
 
-- `board scope` 嗅探入口
-- `project scope` 上下文 builder
-- `SniffSnapshot` 生产者
+## userkiller（系统自动化/世界层入口）
 
-## 2. emergency-planner
+**技术栈**：Python Flask 后端 + React(JS) 前端 + Electron 壳。**与另两个项目技术栈异构，这是"只桥接不迁移"的根本原因。**
 
-### 已确认的关键入口
+**值得抽象的语义**（不搬代码，搬概念）：
 
-- `server/services/planningWindow.ts`
-- `server/services/autoBlocks.ts`
-- `server/services/scheduler.ts`
-- `server/services/dateUtils.ts`
-- `drizzle/schema.ts`
+- `session_manager.py`：workflow session 抽象（会话即工作区目录 + sessions.json 索引）。
+- `workflow_engine.py`：五模块流水线（PM → Planner → Preprocessor → Coder → Reviewer），有工作流日志和步骤状态。→ 对应 `UserkillerSessionStatus`。
+- `template_manager.py`：模板保存/相似检测/文件兼容性映射 —— 自动化复用语义，第二阶段再接。
+- `app.py`：REST API 完整（sessions / files / execute / status / templates），是天然的桥接面，完整清单见 `module-userkiller/src/legacyBridgeNotes.ts`。
 
-### 适合复用的能力
+**明确不做**：把 Python 核心重写成 JS。执行链依赖本地文件系统和子进程，重写风险高、收益低。
 
-- planning window semantics
-- conflict detection
-- time constraints / auto blocks
-- urgency and priority semantics
-- project-scoped planner snapshot construction
+**在 Chariot 中的角色**：`module-userkiller` 只实现 HTTP adapter（contract 已定义），Chariot 负责展示会话/产物和触发执行。
 
-### 不适合直接复用的部分
+## 汇总：三系统 → Chariot 映射
 
-- 主页面流程
-- onboarding
-- 具体日历/周历视图
-- 应用内能量管理 UI
+| 源项目 | 核心能力 | Chariot 落点 | 接入方式 |
+|---|---|---|---|
+| HERMIT | deepSniff / contextPipeline / projectIntelligence | module-hermit、Project Map | 抽库（同为 TS，可渐进搬） |
+| emergency-planner | scheduler / autoBlocks / plannerSnapshot | module-planner | 抽库（类型已对齐） |
+| userkiller | session / template / workflow REST API | module-userkiller | HTTP 桥接（不迁移） |
 
-### 在 Chariot 中的角色
-
-emergency-planner 是系统约束/排程层。
-
-当前在 Chariot 中应先表现为：
-
-- `global scope` planner snapshot
-- `project scope` planner snapshot
-- conflict detector
-
-## 3. userkiller
-
-### 已确认的关键入口
-
-- `backend/session_manager.py`
-- `backend/workflow_engine.py`
-- `backend/template_manager.py`
-- `backend/modules/file_reader.py`
-- `backend/app.py`
-
-### 适合复用的能力
-
-- session abstraction
-- workflow execution state
-- template semantics
-- artifact loading
-- file reading / workspace inventory
-
-### 当前不该做的事
-
-- 不做 Python 核心重写
-- 不把 Electron / Flask 整体搬进壳层
-- 不急着把全部执行逻辑改成 TypeScript
-
-### 在 Chariot 中的角色
-
-userkiller 是自动化工作流层。
-
-当前在 Chariot 中应先表现为：
-
-- `SessionAdapter`
-- `ArtifactLoader`
-- legacy bridge notes
-- workbench 入口面板
-
-## 4. 结论：哪些代码值得优先抽
-
-### 先从 HERMIT 抽
-
-- `contextAssembler.ts`
-- `profileBuilder.ts`
-- `deepSniff.ts`
-- `contextPipeline.ts`
-
-### 先从 emergency-planner 抽
-
-- `planningWindow.ts`
-- `autoBlocks.ts`
-- `scheduler.ts`
-
-### 先从 userkiller 抽
-
-- `session_manager.py`
-- `template_manager.py`
-- `modules/file_reader.py`
-
-## 5. 暂时只适配不迁移的区域
-
-- HERMIT 页面和 workflow UI
-- emergency-planner 页面与 onboarding
-- userkiller Python 执行链
-- Tia 负责的 Board 视觉系统
-
-## 6. 对 Chariot 第一阶段的直接影响
-
-这份分析直接决定了当前骨架的形态：
-
-- Board 只做项目入口、全局嗅探入口、全局冲突占位
-- Workbench 只做项目级上下文、planner、module host
-- 所有真实能力先落到 `types + kernel + module contracts`
-- 不做整页迁移
+**一个值得注意的事实**：HERMIT 和 emergency-planner 技术栈同构（同一套脚手架），且 emergency-planner 里已出现 Chariot 风格的 snapshot 类型——两者的能力抽取可以共享一套模式；userkiller 是唯一的异构系统，边界必须保持在 HTTP 层。

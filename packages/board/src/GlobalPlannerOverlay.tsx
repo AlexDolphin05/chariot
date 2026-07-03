@@ -1,39 +1,30 @@
-import { useChariotI18n } from "@chariot/kernel";
-import { detectGlobalConflicts } from "@chariot/module-planner";
+/**
+ * 全局 Planner 提示条 — 占位。
+ * 展示 global scope 的冲突概览，完整视觉交给 Tia。
+ */
+import { useKernelStore } from "@chariot/kernel";
 
 export function GlobalPlannerOverlay() {
-  const { locale, t } = useChariotI18n();
-  const snapshot = detectGlobalConflicts(locale);
-  const impactedProjectCount = new Set(
-    snapshot.conflicts.flatMap((conflict) => conflict.relatedProjectIds),
-  ).size;
+  const snapshot = useKernelStore((s) => s.globalPlanner);
+  if (!snapshot) return null;
 
+  const count = snapshot.conflicts.length;
   return (
-    <div className="chariot-planner-whisper">
-      <div className="chariot-microcopy">{t("planner.overlayTitle")}</div>
-      <div
-        style={{
-          display: "grid",
-          gap: "10px",
-          fontSize: "13px",
-          marginTop: "10px",
-        }}
-      >
-        <div className="chariot-status-row">
-          <span className="chariot-chip">
-            {t("planner.conflicts", { count: snapshot.conflicts.length })}
-          </span>
-          <span className="chariot-chip">
-            {t("planner.impactedProjects", { count: impactedProjectCount })}
-          </span>
-        </div>
-        <div style={{ color: "var(--text-muted)", lineHeight: 1.5 }}>
-          {snapshot.conflicts[0]?.message ?? t("planner.none")}
-        </div>
-        <div style={{ color: "var(--accent-strong)", lineHeight: 1.5 }}>
-          {snapshot.suggestions[0]}
-        </div>
-      </div>
+    <div
+      className={`rounded-md px-3 py-2 text-xs ${
+        count > 0
+          ? "bg-rose-50 text-rose-700"
+          : "bg-emerald-50 text-emerald-700"
+      }`}
+    >
+      <p className="font-medium">
+        全局排程{count > 0 ? `：检测到 ${count} 个冲突` : "：无冲突"}
+      </p>
+      <ul className="mt-1 space-y-0.5">
+        {snapshot.conflicts.map((c) => (
+          <li key={c.id}>· {c.message}</li>
+        ))}
+      </ul>
     </div>
   );
 }

@@ -1,84 +1,70 @@
-import { startTransition, useEffect, useState } from "react";
+/**
+ * Global Hermit 输入条 — 常驻页面底部。
+ * board scope：基于全部项目做"全局嗅探"式问答（当前为 mock runner）。
+ */
+import { useState } from "react";
+import { eventBus, useKernelStore } from "@chariot/kernel";
 import {
-  getBoardScope,
-  publish,
-  useChariotI18n,
-  useKernelStore,
-} from "@chariot/kernel";
-import { runHermitInBoardScope } from "@chariot/module-hermit";
+  buildBoardHermitContext,
+  runHermitInBoardScope,
+} from "@chariot/module-hermit";
 
 export function GlobalHermitBar() {
-  const { locale, t } = useChariotI18n();
-  const input = useKernelStore((state) => state.globalHermitInput);
-  const setInput = useKernelStore((state) => state.setGlobalHermitInput);
-  const [lastAnswer, setLastAnswer] = useState(
-    t("globalHermit.defaultAnswer"),
-  );
-  const [isRunning, setIsRunning] = useState(false);
-  const scope = getBoardScope();
+  const input = useKernelStore((s) => s.globalHermitInput);
+  const setInput = useKernelStore((s) => s.setGlobalHermitInput);
+  const [answer, setAnswer] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
 
-  useEffect(() => {
-    setLastAnswer(t("globalHermit.defaultAnswer"));
-  }, [locale]);
-
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-
+  async function ask() {
     const question = input.trim();
+    if (!question || busy) return;
 
-    if (!question) {
-      return;
-    }
-
-    const scope = getBoardScope();
-
-    publish({
+    eventBus.publish({
       type: "board/hermit.ask",
-      payload: {
-        question,
-        scope,
-      },
+      payload: { question, scope: buildBoardHermitContext().scope },
     });
 
-    setIsRunning(true);
-    const answer = await runHermitInBoardScope(question, locale);
-
-    startTransition(() => {
-      setLastAnswer(answer);
-    });
-
-    setIsRunning(false);
+    setBusy(true);
+    try {
+      setAnswer(await runHermitInBoardScope(question));
+      setInput("");
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
-    <div className="chariot-curtain-hermit">
-      <div className="chariot-curtain-hermit-header">
-        <div>
-          <div className="chariot-microcopy">{t("globalHermit.title")}</div>
-          <div className="chariot-curtain-hermit-subtitle">
-            {t("globalHermit.subtitle")}
-          </div>
+    <div className="border-t border-slate-200 bg-white px-4 py-3">
+      {answer ? (
+        <div className="mb-2 flex items-start justify-between gap-3 rounded-md bg-slate-50 px-3 py-2 text-xs leading-relaxed text-slate-600">
+          <pre className="whitespace-pre-wrap font-sans">{answer}</pre>
+          <button
+            type="button"
+            className="shrink-0 text-slate-400 hover:text-slate-600"
+            onClick={() => setAnswer(null)}
+          >
+            关闭
+          </button>
         </div>
-        <span className="chariot-chip">
-          {t("globalHermit.scopeCount", { count: scope.projectIds.length })}
-        </span>
-      </div>
-
-      <form onSubmit={handleSubmit} className="chariot-curtain-hermit-form">
+      ) : null}
+      <div className="flex gap-2">
         <input
-          type="text"
-          placeholder={t("globalHermit.placeholder")}
           value={input}
-          onChange={(event) => setInput(event.target.value)}
-          className="chariot-curtain-hermit-input"
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") void ask();
+          }}
+          placeholder="Global Hermit：基于所有项目提问……"
+          className="flex-1 rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-amber-400"
         />
-        <button type="submit" className="chariot-curtain-hermit-button">
-          {isRunning ? t("globalHermit.sniffing") : t("globalHermit.ask")}
+        <button
+          type="button"
+          onClick={() => void ask()}
+          disabled={busy}
+          className="rounded-md bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:opacity-50"
+        >
+          {busy ? "思考中…" : "问 Hermit"}
         </button>
-      </form>
-
-      <div className="chariot-curtain-hermit-answer">
-        {lastAnswer}
       </div>
     </div>
   );

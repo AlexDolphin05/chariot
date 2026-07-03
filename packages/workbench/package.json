@@ -1,26 +1,23 @@
 {
   "name": "@chariot/workbench",
   "version": "0.1.0",
+  "private": true,
   "type": "module",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
-  "scripts": {
-    "check": "tsc --noEmit"
-  },
   "dependencies": {
     "@chariot/types": "workspace:*",
     "@chariot/kernel": "workspace:*",
     "@chariot/ui": "workspace:*",
     "@chariot/module-hermit": "workspace:*",
     "@chariot/module-planner": "workspace:*",
-    "@chariot/module-userkiller": "workspace:*",
-    "react": "^19.2.1"
+    "@chariot/module-userkiller": "workspace:*"
   },
   "peerDependencies": {
-    "react": "^18 || ^19"
+    "react": "^18.3.1"
   },
   "devDependencies": {
-    "@types/react": "^19.2.1",
-    "typescript": "5.9.3"
+    "@types/react": "^18.3.12",
+    "react": "^18.3.1"
   }
 }

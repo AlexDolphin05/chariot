@@ -1,12 +1,19 @@
-export const tokens = {
-  panelBorder: "1px solid var(--border-strong)",
-  panelMutedBorder: "1px solid var(--border-soft)",
-  panelBg:
-    "linear-gradient(180deg, rgba(24, 34, 30, 0.92) 0%, rgba(16, 22, 20, 0.94) 100%)",
-  panelBgElevated:
-    "linear-gradient(180deg, rgba(34, 48, 42, 0.94) 0%, rgba(18, 25, 23, 0.98) 100%)",
-  panelRadius: "18px",
-  shellRadius: "24px",
-  headerHeight: "64px",
-  hermitBarHeight: "86px",
+/**
+ * 基础 tokens — 第一阶段只定义语义常量，视觉细节留给 Tia。
+ * Tailwind 类名散落在组件里没问题，但状态色等语义映射统一从这里取。
+ */
+import type { ChariotProjectStatus } from "@chariot/types";
+
+export const statusColor: Record<ChariotProjectStatus, string> = {
+  idle: "bg-slate-400",
+  active: "bg-emerald-500",
+  blocked: "bg-rose-500",
+  done: "bg-sky-500",
+};
+
+export const statusLabel: Record<ChariotProjectStatus, string> = {
+  idle: "待启动",
+  active: "进行中",
+  blocked: "被阻塞",
+  done: "已完成",
 };

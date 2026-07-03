@@ -1,68 +1,22 @@
-import {
-  getModuleLabel,
-  useChariotI18n,
-  useKernelStore,
-} from "@chariot/kernel";
+import { useActiveProject, useActiveWorkspace } from "@chariot/kernel";
+import { statusColor, statusLabel } from "@chariot/ui";
 
-type WorkspaceHeaderProps = {
-  onBackToCurtain?: () => void;
-};
-
-export function WorkspaceHeader({ onBackToCurtain }: WorkspaceHeaderProps) {
-  const { locale, t } = useChariotI18n();
-  const activeWorkspaceId = useKernelStore((state) => state.activeWorkspaceId);
-  const activeProjectId = useKernelStore((state) => state.activeProjectId);
-  const activeWorkbenchModule = useKernelStore(
-    (state) => state.activeWorkbenchModule,
-  );
-  const projects = useKernelStore((state) => state.projects);
-  const workspaces = useKernelStore((state) => state.workspaces);
-
-  const activeProject =
-    projects.find((project) => project.id === activeProjectId) ?? null;
-  const workspace =
-    workspaces.find((candidate) => candidate.id === activeWorkspaceId) ?? null;
-  const sourcePath =
-    typeof workspace?.metadata.sourcePath === "string"
-      ? workspace.metadata.sourcePath
-      : null;
-  const role =
-    typeof workspace?.metadata.role === "string" ? workspace.metadata.role : null;
+export function WorkspaceHeader() {
+  const project = useActiveProject();
+  const workspace = useActiveWorkspace();
+  if (!project || !workspace) return null;
 
   return (
-    <div className="chariot-workspace-card-header">
-      <div className="chariot-workspace-heading">
-        {onBackToCurtain ? (
-          <button
-            type="button"
-            className="chariot-back-button"
-            onClick={onBackToCurtain}
-          >
-            {t("workspace.back")}
-          </button>
-        ) : null}
-        <div style={{ minWidth: 0 }}>
-          <div className="chariot-microcopy">{t("workbench.microcopy")}</div>
-          <div className="chariot-workspace-title">
-            {activeProject?.title ?? t("workbench.selectProject")}
-          </div>
-          <div className="chariot-workspace-summary">
-            {activeProject?.summary ?? t("workbench.description")}
-          </div>
-        </div>
+    <header className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
+      <div>
+        <h2 className="text-base font-bold text-slate-800">{project.title}</h2>
+        <p className="text-xs text-slate-400">{workspace.name}</p>
       </div>
-
-      <div className="chariot-workspace-meta">
-        <span className="chariot-chip">
-          {t("workbench.activeModule", {
-            name: getModuleLabel(activeWorkbenchModule, locale),
-          })}
-        </span>
-        {role ? <span className="chariot-chip">{role}</span> : null}
-        {sourcePath ? (
-          <span className="chariot-workspace-path">{sourcePath}</span>
-        ) : null}
-      </div>
-    </div>
+      <span className="flex items-center gap-1.5 text-xs text-slate-500">
+        <span className={`h-2 w-2 rounded-full ${statusColor[project.status]}`} />
+        {statusLabel[project.status]}
+        {project.priority ? ` · P${project.priority}` : ""}
+      </span>
+    </header>
   );
 }

@@ -1,48 +1,29 @@
-import { useChariotI18n, useKernelStore } from "@chariot/kernel";
+/**
+ * BoardPane — 外层世界区（占位布局）。
+ * 真实画布（自由摆放的 post-it、连线）由 Tia 实现；
+ * 这里用简单网格渲染项目卡，先保证"点卡 → 打开 workspace"闭环。
+ */
+import { useKernelStore } from "@chariot/kernel";
 import { BoardProjectCard } from "./BoardProjectCard";
 import { GlobalPlannerOverlay } from "./GlobalPlannerOverlay";
 
 export function BoardPane() {
-  const { t } = useChariotI18n();
-  const projects = useKernelStore((state) => state.projects);
-  const activeProjectId = useKernelStore((state) => state.activeProjectId);
-  const activeProject =
-    projects.find((project) => project.id === activeProjectId) ?? null;
+  const projects = useKernelStore((s) => s.projects);
 
   return (
-    <section className="chariot-board-shell">
-      <div className="chariot-board-surface">
-        <div className="chariot-board-overlay chariot-board-overlay-planner">
-          <GlobalPlannerOverlay />
-        </div>
-
-        <div className="chariot-board-note-layer">
-          {projects.map((card) => (
-            <div
-              key={card.id}
-              className="chariot-board-note-anchor"
-              style={{
-                left: card.boardPosition.x,
-                top: card.boardPosition.y,
-              }}
-            >
-              <BoardProjectCard card={card} />
-            </div>
-          ))}
-        </div>
-
-        <div className="chariot-board-overlay chariot-board-overlay-caption">
-          <div className="chariot-board-caption">
-            <div className="chariot-microcopy">{t("board.activeTarget")}</div>
-            <div className="chariot-board-caption-title">
-              {activeProject?.title ?? t("board.selectProject")}
-            </div>
-            <div className="chariot-board-caption-copy">
-              {activeProject?.summary ?? t("board.rightWorkbenchHint")}
-            </div>
-          </div>
-        </div>
+    <div className="flex h-full min-h-0 flex-col gap-3 p-4">
+      <div className="flex items-baseline justify-between">
+        <h2 className="text-base font-bold text-slate-800">Board</h2>
+        <span className="text-xs text-slate-400">
+          全局视图 · {projects.length} 个项目
+        </span>
       </div>
-    </section>
+      <GlobalPlannerOverlay />
+      <div className="grid min-h-0 flex-1 auto-rows-min grid-cols-1 gap-3 overflow-auto xl:grid-cols-2">
+        {projects.map((card) => (
+          <BoardProjectCard key={card.id} card={card} />
+        ))}
+      </div>
+    </div>
   );
 }

@@ -1,82 +1,34 @@
-import { useEffect, useState } from "react";
-import { switchWorkbenchModule, useKernelStore } from "@chariot/kernel";
-import { HermitPanel } from "./HermitPanel";
+/**
+ * WorkbenchPane — 内层工作区（Alex 负责的重点区域）。
+ * 布局：WorkspaceHeader 顶部，ModuleHost + ProjectMapPanel 主体，PlanetDock 右侧。
+ */
+import { useActiveWorkspace } from "@chariot/kernel";
 import { ModuleHost } from "./ModuleHost";
-import { PlannerPanel } from "./PlannerPanel";
+import { PlanetDock } from "./PlanetDock";
 import { ProjectMapPanel } from "./ProjectMapPanel";
-import {
-  WorkbenchConstellation,
-  type WorkbenchOrbitView,
-} from "./WorkbenchConstellation";
 import { WorkspaceHeader } from "./WorkspaceHeader";
 
-type WorkbenchPaneProps = {
-  onBackToCurtain?: () => void;
-};
+export function WorkbenchPane() {
+  const workspace = useActiveWorkspace();
 
-export function WorkbenchPane({ onBackToCurtain }: WorkbenchPaneProps) {
-  const activeWorkspaceId = useKernelStore((state) => state.activeWorkspaceId);
-  const activeWorkbenchModule = useKernelStore(
-    (state) => state.activeWorkbenchModule,
-  );
-  const [activeOrbit, setActiveOrbit] = useState<WorkbenchOrbitView>("hermit");
-
-  useEffect(() => {
-    setActiveOrbit("hermit");
-  }, [activeWorkspaceId]);
-
-  useEffect(() => {
-    if (activeWorkbenchModule === "planner" || activeWorkbenchModule === "userkiller") {
-      setActiveOrbit(activeWorkbenchModule);
-      return;
-    }
-
-    if (activeWorkbenchModule === "hermit" && activeOrbit !== "map") {
-      setActiveOrbit("hermit");
-    }
-  }, [activeOrbit, activeWorkbenchModule]);
-
-  function handleSelectOrbit(orbit: WorkbenchOrbitView) {
-    setActiveOrbit(orbit);
-
-    if (orbit === "planner" || orbit === "userkiller" || orbit === "hermit") {
-      switchWorkbenchModule(orbit);
-      return;
-    }
-
-    switchWorkbenchModule("hermit");
+  if (!workspace) {
+    return (
+      <div className="flex h-full items-center justify-center text-sm text-slate-400">
+        从左侧 Board 打开一个项目，进入它的工作区
+      </div>
+    );
   }
 
-  const focusPanel =
-    activeOrbit === "planner" ? (
-      <PlannerPanel />
-    ) : activeOrbit === "userkiller" ? (
-      <ModuleHost />
-    ) : activeOrbit === "map" ? (
-      <ProjectMapPanel />
-    ) : (
-      <HermitPanel />
-    );
-
   return (
-    <section
-      style={{
-        height: "100%",
-        display: "grid",
-        gridTemplateRows: "auto minmax(0, 1fr)",
-        gap: "16px",
-      }}
-    >
-      <WorkspaceHeader onBackToCurtain={onBackToCurtain} />
-      <div className="chariot-constellation-layout">
-        <WorkbenchConstellation
-          activeOrbit={activeOrbit}
-          onSelectOrbit={handleSelectOrbit}
-        />
-        <div className="chariot-detail-panel-shell">
-          {focusPanel}
+    <div className="flex h-full min-h-0">
+      <div className="flex min-h-0 flex-1 flex-col">
+        <WorkspaceHeader />
+        <div className="grid min-h-0 flex-1 grid-rows-[minmax(0,3fr)_minmax(0,2fr)] gap-3 p-3">
+          <ModuleHost />
+          <ProjectMapPanel />
         </div>
       </div>
-    </section>
+      <PlanetDock />
+    </div>
   );
 }
